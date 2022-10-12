@@ -2,7 +2,17 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <math.h>
+#include <x86intrin.h>
+#include <immintrin.h>
 
+static __inline__ unsigned long long rdtsc(void) {
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+#define MAX_FREQ 3.2
+#define BASE_FREQ 2.4
 #define OBSERVATIONS	103
 #define FEATURES	16
 
@@ -18,7 +28,7 @@
 
 typedef struct dataset_t {
    char *name;
-   int  features[ FEATURES ];
+   float  features[ FEATURES ];
    int  class;
    int  label;
 } dataset_t;
@@ -170,15 +180,26 @@ dataset_t dataset[ OBSERVATIONS ] =
 
 };
 
+// Globals for distance performance
+int dst_call_count = 0;
+unsigned long long dst_st = 0;
+unsigned long long dst_et = 0;
+unsigned long long dst_cycles = 0;
+
 
 double distance( int i, int j )
 {
    double sum = 0.0;
+   dst_call_count += 1;
 
+   dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
+   dst_et = rdtsc();
+
+   dst_cycles += (dst_et - dst_st);
 
    return sqrt( sum );
 }
@@ -194,7 +215,7 @@ neighbors_t *find_neighbors( int observation )
    {
       if ( i == observation ) continue;
 
-      if ( distance( observation, i ) <= EPSILON )
+      if ( distance( observation, i ) <= EPSILON ) //dbscan calls find neighbors
       {
          neighbor->neighbor[ i ] = 1;
          neighbor->neighbor_count++;
@@ -248,7 +269,7 @@ void process_neighbors( int initial_point, neighbors_t *seed_set )
          dataset[ i ].label = dataset[ initial_point ].label;
 
          neighbors_t *neighbors = find_neighbors( i );
-
+         // NOT NOISE
          if ( neighbors->neighbor_count >= MINPTS )
          {
             fold_neighbors( seed_set, neighbors );
@@ -293,9 +314,19 @@ int dbscan( void )
 
 int main( void )
 {
+   unsigned long long cycles = 0;
+   unsigned long long st = 0;
+   unsigned long long et = 0;
+   double dst_percentage = 0;
+
    int clusters;
 
+   st = rdtsc();
    clusters = dbscan( );
+   et = rdtsc();
+   cycles += (et-st);
+
+   dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;
 
    // emit classes
    for ( int class = 1 ; class <= clusters ; class++ )
@@ -321,6 +352,20 @@ int main( void )
       }
    }
    printf("\n");
+
+
+   printf("Dataset Metrics:\n");
+   printf("Number of datapoints: %d, Number of features: %d\n\n", OBSERVATIONS, FEATURES);
+
+   printf("Performance Metrics:\n");
+   printf("RDTSC Base Cycles Taken for dbscan: %llu\n", cycles);
+   printf("RDTSC Base Cycles Taken for distance: %llu\n", dst_cycles);
+
+   printf("TURBO Cycles Taken for dbscan: %f\n", cycles * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for distance: %f\n", dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
+
+   printf("Percentage of Cycles Spent Calculating distance: %% %f\n", dst_percentage);
+   printf("Distance is called %d times, each of which takes ~%f cycles\n", dst_call_count, ((double) dst_cycles / (double)dst_call_count));
 
    return 0;
 }

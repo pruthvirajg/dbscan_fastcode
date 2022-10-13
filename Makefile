@@ -14,7 +14,7 @@ run:
 	./main
 
 assemble:
-	objdump -s -d -f --source ./dbscan > dbscan.S
+	objdump -s -d -f --source ./main > ./odump/main.S
 	
 clean:
 	rm -f main augment ./data/augmented_dataset.csv

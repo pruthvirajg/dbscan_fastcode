@@ -1,145 +1,139 @@
+./data/augmented_dataset.csv does not exit, loading file ./data/dataset.csv
 Class 1:
   aardvark (1)
   antelope (1)
+  bass (4)
   bear (1)
   boar (1)
   buffalo (1)
   calf (1)
+  carp (4)
+  catfish (4)
   cavy (1)
   cheetah (1)
+  chicken (2)
+  chub (4)
+  crab (7)
+  crayfish (7)
+  crow (2)
   deer (1)
+  dogfish (4)
+  dolphin (1)
+  dove (2)
+  duck (2)
   elephant (1)
+  flamingo (2)
+  flea (6)
+  frog (5)
+  frog1 (5)
+  fruitbat (1)
   giraffe (1)
+  girl (1)
+  gnat (6)
   goat (1)
+  gorilla (1)
+  gull (2)
+  haddock (4)
   hamster (1)
   hare (1)
+  hawk (2)
+  herring (4)
+  honeybee (6)
+  housefly (6)
+  kiwi (2)
+  ladybird (6)
+  lark (2)
   leopard (1)
   lion (1)
+  lobster (7)
   lynx (1)
   mink (1)
   mole (1)
   mongoose (1)
+  moth (6)
+  newt (5)
   opossum (1)
   oryx (1)
-  platypus (1)
-  polecat (1)
-  pony (1)
-  puma (1)
-  pussycat (1)
-  raccoon (1)
-  reindeer (1)
-  vole (1)
-  wolf (1)
-
-Class 2:
-  bass (4)
-  carp (4)
-  catfish (4)
-  chub (4)
-  dogfish (4)
-  haddock (4)
-  herring (4)
-  pike (4)
-  piranha (4)
-  seahorse (4)
-  sole (4)
-  stingray (4)
-  tuna (4)
-
-Class 3:
-  chicken (2)
-  crow (2)
-  dove (2)
-  duck (2)
-  flamingo (2)
-  gull (2)
-  hawk (2)
-  kiwi (2)
-  lark (2)
   ostrich (2)
   parakeet (2)
   penguin (2)
   pheasant (2)
+  pike (4)
+  piranha (4)
+  pitviper (3)
+  platypus (1)
+  polecat (1)
+  pony (1)
+  porpoise (1)
+  puma (1)
+  pussycat (1)
+  raccoon (1)
+  reindeer (1)
   rhea (2)
+  seahorse (4)
+  seal (1)
   skimmer (2)
   skua (2)
-  sparrow (2)
-  swan (2)
-  vulture (2)
-  wren (2)
-
-Class 4:
-  crab (7)
-  crayfish (7)
-  flea (6)
-  gnat (6)
-  honeybee (6)
-  housefly (6)
-  ladybird (6)
-  lobster (7)
-  moth (6)
-  starfish (7)
-  termite (6)
-  wasp (6)
-  flea with teeth (0)
-  six legged aquatic egg layer (0)
-
-Class 5:
-  frog (5)
-  frog (5)
-  newt (5)
-  toad (5)
-  tuatara (3)
-
-Class 6:
-  fruitbat (1)
-  gorilla (1)
-  squirrel (1)
-  vampire (1)
-  wallaby (1)
-
-NOISE
-  dolphin (1)
-  girl (1)
-  octopus (7)
-  pitviper (3)
-  porpoise (1)
-  scorpion (7)
-  seal (1)
-  sealion (1)
-  seasnake (3)
-  seawasp (7)
   slowworm (3)
   slug (7)
-  tortoise (3)
+  sole (4)
+  sparrow (2)
+  squirrel (1)
+  starfish (7)
+  stingray (4)
+  swan (2)
+  termite (6)
+  toad (5)
+  tuatara (3)
+  tuna (4)
+  vampire (1)
+  vole (1)
+  vulture (2)
+  wallaby (1)
+  wasp (6)
+  wolf (1)
   worm (7)
-  predator with hair (0)
+  wren (2)
+  flea-with-teeth (0)
+  six-legged-aquatic-egg-layer (0)
+
+Class 2:
+  octopus (7)
+
+Class 3:
+  scorpion (7)
+
+Class 4:
+  sealion (1)
+
+Class 5:
+  seasnake (3)
+
+Class 6:
+  seawasp (7)
+
+Class 7:
+  tortoise (3)
+
+Class 8:
+  predator-with-hair (0)
+
+NOISE
+  predator-with-hair (0)
 
 Dataset Metrics:
 Number of datapoints: 103, Number of features: 16
 
 Performance Metrics Over N = 100 Runs:
-RDTSC Base Cycles Taken for dbscan: 75850083
-RDTSC Base Cycles Taken for distance: 39545973
-TURBO Cycles Taken for dbscan: 101133444.000000
-TURBO Cycles Taken for distance: 52727964.000000
-Percentage of Cycles Spent Calculating distance: % 52.137020
-Distance is called 1091400 times, each of which takes ~36.234170 cycles
+RDTSC Base Cycles Taken for dbscan: 247548675
+TURBO Cycles Taken for dbscan: 330064900.000000
+Percentage of Cycles Spent Calculating distance: % 0.000000
 
 Average Performance Metrics:
-Average RDTSC Base Cycles Taken for dbscan: 758500
-Average RDTSC Base Cycles Taken for distance: 395459
-TURBO Cycles Taken for dbscan: 1011333.333333
-TURBO Cycles Taken for distance: 527278.666667
-Percentage of Cycles Spent Calculating distance: % 52.137020
-Distance is called 10914 times, each of which takes ~36.234170 cycles
+Average RDTSC Base Cycles Taken for dbscan: 2475486
+TURBO Cycles Taken for dbscan: 3300648.000000
+Percentage of Cycles Spent Calculating distance: % 0.000000
 
 Peak Performance:
 Peak FLOPS/Cycle = 24.00
 Peak GFLOPS/Second = 76.80
-
-Baseline Performance:
-Number of operations peformed in each run of DBSCAN is 32742
-Total number of cycles spent in the core distance function is 395459
-Baseline FLOPS/Cycle = 0.082795
-Baseline GFLOPS/Second = 0.264943

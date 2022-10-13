@@ -1,10 +1,10 @@
 CC = gcc
 CFLAGS = -I. -g -std=c99 -Wall
 
-all: dbscan
+all: main
 
-dbscan: dbscan.c
+main: main.c ./src/dbscan.c ./src/utils.c
 	$(CC) -o $@ $^ $(CFLAGS) -lm
 
 clean:
-	rm -f dbscan
+	rm -f main

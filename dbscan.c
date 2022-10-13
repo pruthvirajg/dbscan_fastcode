@@ -259,15 +259,8 @@ void free_dataset(){
 
 }
 
-int main( void )
-{
-   int clusters;
 
-   load_dataset();
-
-   clusters = dbscan( );
-
-   // emit classes
+void emit_classes(int clusters){
    for ( int class = 1 ; class <= clusters ; class++ )
    {
       printf( "Class %d:\n", class );
@@ -280,8 +273,10 @@ int main( void )
       }
       printf("\n");
    }
+}
 
-   // Emit outliers (NOISE)
+
+void emit_outliers(){
    printf( "NOISE\n" );
    for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
    {
@@ -291,6 +286,22 @@ int main( void )
       }
    }
    printf("\n");
+}
+
+
+int main( void )
+{
+   int clusters;
+
+   load_dataset();
+
+   clusters = dbscan( );
+
+   // emit classes
+   emit_classes(clusters);
+
+   // Emit outliers (NOISE)
+   emit_outliers();
 
    free_dataset();
 

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I. -g -std=c99 -Wall
+CFLAGS = -I. -g -std=c99 -Wall -O3
 
 all: augment main assemble
 

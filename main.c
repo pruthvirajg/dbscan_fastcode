@@ -21,6 +21,11 @@ int main( void )
    unsigned long long et = 0;
    double dst_percentage = 0;
 
+   dst_call_count = 0;
+   dst_st = 0;
+   dst_et  = 0;
+   dst_cycles = 0;
+
    int clusters;
 
    load_dataset();
@@ -48,7 +53,7 @@ int main( void )
 
    }
 
-   // dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;
+   dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;
 
    // emit classes
    emit_classes(clusters);
@@ -60,30 +65,30 @@ int main( void )
 
    // Dataset
    printf("Dataset Metrics:\n");
-   printf("Number of datapoints: %d, Number of features: %d\n\n", OBSERVATIONS, FEATURES);
+   printf("Number of datapoints: %lu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
 
    // For N runs
    printf("Performance Metrics Over N = %llu Runs:\n", runs);
    printf("RDTSC Base Cycles Taken for dbscan: %llu\n", cycles);
-   // printf("RDTSC Base Cycles Taken for distance: %llu\n", dst_cycles);
+   printf("RDTSC Base Cycles Taken for distance: %llu\n", dst_cycles);
 
    printf("TURBO Cycles Taken for dbscan: %f\n", cycles * ((double)MAX_FREQ)/BASE_FREQ);
-   // printf("TURBO Cycles Taken for distance: %f\n", dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for distance: %f\n", dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
 
    printf("Percentage of Cycles Spent Calculating distance: %% %f\n", dst_percentage);
-   // printf("Distance is called %d times, each of which takes ~%f cycles\n", dst_call_count, ((double) dst_cycles / (double)dst_call_count));
+   printf("Distance is called %d times, each of which takes ~%f cycles\n", dst_call_count, ((double) dst_cycles / (double)dst_call_count));
 
    // Average Performance
    printf("\nAverage Performance Metrics:\n");
 
    printf("Average RDTSC Base Cycles Taken for dbscan: %llu\n", (cycles/runs));
-   // printf("Average RDTSC Base Cycles Taken for distance: %llu\n", (dst_cycles/runs));
+   printf("Average RDTSC Base Cycles Taken for distance: %llu\n", (dst_cycles/runs));
 
    printf("TURBO Cycles Taken for dbscan: %f\n", (cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
-   // printf("TURBO Cycles Taken for distance: %f\n", (dst_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for distance: %f\n", (dst_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
 
    printf("Percentage of Cycles Spent Calculating distance: %% %f\n", dst_percentage);
-   // printf("Distance is called %llu times, each of which takes ~%f cycles\n", (dst_call_count / runs), ((double) dst_cycles / (double)dst_call_count));
+   printf("Distance is called %llu times, each of which takes ~%f cycles\n", (dst_call_count / runs), ((double) dst_cycles / (double)dst_call_count));
 
    // Peak Performance
    printf("\nPeak Performance:\n");
@@ -91,11 +96,11 @@ int main( void )
    printf("Peak GFLOPS/Second = 76.80\n");
 
    // Baseline Performance 
-   // printf("\nBaseline Performance:\n");
-   // printf("Number of operations peformed in each run of DBSCAN is %llu\n", (dst_call_count/runs)*3);
-   // printf("Total number of cycles spent in the core distance function is %llu\n", (dst_cycles/runs));
-   // printf("Baseline FLOPS/Cycle = %f\n", (dst_call_count*3.0) / (dst_cycles));
-   // printf("Baseline GFLOPS/Second = %f", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
+   printf("\nBaseline Performance:\n");
+   printf("Number of operations peformed in each run of DBSCAN is %llu\n", (dst_call_count/runs)*3);
+   printf("Total number of cycles spent in the core distance function is %llu\n", (dst_cycles/runs));
+   printf("Baseline FLOPS/Cycle = %f\n", (dst_call_count*3.0) / (dst_cycles));
+   printf("Baseline GFLOPS/Second = %f", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
 
    return 0;
 

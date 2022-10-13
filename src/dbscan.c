@@ -23,16 +23,16 @@ static __inline__ unsigned long long rdtsc(void) {
 double distance( int i, int j )
 {
    double sum = 0.0;
-   // dst_call_count += 1;
+   dst_call_count += 1;
 
-   // dst_st = rdtsc();
+   dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
-   // dst_et = rdtsc();
+   dst_et = rdtsc();
    
-   // dst_cycles += (dst_et - dst_st);
+   dst_cycles += (dst_et - dst_st);
 
    return sqrt( sum );
 }
@@ -43,7 +43,9 @@ neighbors_t *find_neighbors( unsigned long observation )
    neighbors_t *neighbor = ( neighbors_t * )malloc( sizeof( neighbors_t ) );
    neighbor->neighbor = ( int * )malloc( sizeof(int) * TOTAL_OBSERVATIONS);
 
-   bzero( (void *)neighbor->neighbor, sizeof( neighbors_t ) );
+   // bzero( (void *)neighbor, sizeof( neighbors_t ) );
+   neighbor->neighbor_count = 0;
+   bzero((void *)neighbor->neighbor, sizeof(int) * TOTAL_OBSERVATIONS);
 
    for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {

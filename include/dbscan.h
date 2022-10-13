@@ -47,10 +47,10 @@ typedef struct neighbors_t {
 dataset_t *dataset;
 
 // Globals for distance performance
-// int dst_call_count = 0;
-// unsigned long long dst_st = 0;
-// unsigned long long dst_et = 0;
-// unsigned long long dst_cycles = 0;
+int dst_call_count;
+unsigned long long dst_st;
+unsigned long long dst_et;
+unsigned long long dst_cycles;
 
 unsigned long TOTAL_OBSERVATIONS;
 

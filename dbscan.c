@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <math.h>
+#include <assert.h>
 
 #define OBSERVATIONS	103
 #define FEATURES	16
@@ -57,119 +59,12 @@ typedef struct neighbors_t {
 // Classes are [1] Mammal, [2] Bird, [3] Reptile, [4] Fish
 //             [5] Amphibian, [6] Bug, [7] Invertebrate.
 
-dataset_t dataset[ OBSERVATIONS ] = 
-{
+// Example dataset
 //  Name        Features                           Class
-   {"aardvark", {1,0,0,1,0,0,1,1,1,1,0,0,4,0,0,1}, 1, 0},
-   {"antelope", {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"bear",     {1,0,0,1,0,0,1,1,1,1,0,0,4,0,0,1}, 1, 0},
-   {"boar",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"buffalo",  {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"calf",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,1,1}, 1, 0},
-   {"carp",     {0,0,1,0,0,1,0,1,1,0,0,1,0,1,1,0}, 4, 0},
-   {"catfish",  {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"cavy",     {1,0,0,1,0,0,0,1,1,1,0,0,4,0,1,0}, 1, 0},
-   {"cheetah",  {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"chicken",  {0,1,1,0,1,0,0,0,1,1,0,0,2,1,1,0}, 2, 0},
-   {"chub",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"crab",     {0,0,1,0,0,1,1,0,0,0,0,0,4,0,0,0}, 7, 0},
-   {"crayfish", {0,0,1,0,0,1,1,0,0,0,0,0,6,0,0,0}, 7, 0},
-   {"crow",     {0,1,1,0,1,0,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"deer",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"dogfish",  {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,1}, 4, 0},
-   {"dolphin",  {0,0,0,1,0,1,1,1,1,1,0,1,0,1,0,1}, 1, 0},
-   {"dove",     {0,1,1,0,1,0,0,0,1,1,0,0,2,1,1,0}, 2, 0},
-   {"duck",     {0,1,1,0,1,1,0,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"elephant", {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"flamingo", {0,1,1,0,1,0,0,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"flea",     {0,0,1,0,0,0,0,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"frog",     {0,0,1,0,0,1,1,1,1,1,0,0,4,0,0,0}, 5, 0},
-   {"frog",     {0,0,1,0,0,1,1,1,1,1,1,0,4,0,0,0}, 5, 0},
-   {"fruitbat", {1,0,0,1,1,0,0,1,1,1,0,0,2,1,0,0}, 1, 0},
-   {"giraffe",  {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"girl",     {1,0,0,1,0,0,1,1,1,1,0,0,2,0,1,1}, 1, 0},
-   {"gnat",     {0,0,1,0,1,0,0,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"goat",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,1,1}, 1, 0},
-   {"gorilla",  {1,0,0,1,0,0,0,1,1,1,0,0,2,0,0,1}, 1, 0},
-   {"gull",     {0,1,1,0,1,1,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"haddock",  {0,0,1,0,0,1,0,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"hamster",  {1,0,0,1,0,0,0,1,1,1,0,0,4,1,1,0}, 1, 0},
-   {"hare",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,0}, 1, 0},
-   {"hawk",     {0,1,1,0,1,0,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"herring",  {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"honeybee", {1,0,1,0,1,0,0,0,0,1,1,0,6,0,1,0}, 6, 0},
-   {"housefly", {1,0,1,0,1,0,0,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"kiwi",     {0,1,1,0,0,0,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"ladybird", {0,0,1,0,1,0,1,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"lark",     {0,1,1,0,1,0,0,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"leopard",  {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"lion",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"lobster",  {0,0,1,0,0,1,1,0,0,0,0,0,6,0,0,0}, 7, 0},
-   {"lynx",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"mink",     {1,0,0,1,0,1,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"mole",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,0}, 1, 0},
-   {"mongoose", {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"moth",     {1,0,1,0,1,0,0,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"newt",     {0,0,1,0,0,1,1,1,1,1,0,0,4,1,0,0}, 5, 0},
-   {"octopus",  {0,0,1,0,0,1,1,0,0,0,0,0,8,0,0,1}, 7, 0},
-   {"opossum",  {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,0}, 1, 0},
-   {"oryx",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"ostrich",  {0,1,1,0,0,0,0,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"parakeet", {0,1,1,0,1,0,0,0,1,1,0,0,2,1,1,0}, 2, 0},
-   {"penguin",  {0,1,1,0,0,1,1,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"pheasant", {0,1,1,0,1,0,0,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"pike",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,1}, 4, 0},
-   {"piranha",  {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"pitviper", {0,0,1,0,0,0,1,1,1,1,1,0,0,1,0,0}, 3, 0},
-   {"platypus", {1,0,1,1,0,1,1,0,1,1,0,0,4,1,0,1}, 1, 0},
-   {"polecat",  {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"pony",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,1,1}, 1, 0},
-   {"porpoise", {0,0,0,1,0,1,1,1,1,1,0,1,0,1,0,1}, 1, 0},
-   {"puma",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"pussycat", {1,0,0,1,0,0,1,1,1,1,0,0,4,1,1,1}, 1, 0},
-   {"raccoon",  {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"reindeer", {1,0,0,1,0,0,0,1,1,1,0,0,4,1,1,1}, 1, 0},
-   {"rhea",     {0,1,1,0,0,0,1,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"scorpion", {0,0,0,0,0,0,1,0,0,1,1,0,8,1,0,0}, 7, 0},
-   {"seahorse", {0,0,1,0,0,1,0,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"seal",     {1,0,0,1,0,1,1,1,1,1,0,1,0,0,0,1}, 1, 0},
-   {"sealion",  {1,0,0,1,0,1,1,1,1,1,0,1,2,1,0,1}, 1, 0},
-   {"seasnake", {0,0,0,0,0,1,1,1,1,0,1,0,0,1,0,0}, 3, 0},
-   {"seawasp",  {0,0,1,0,0,1,1,0,0,0,1,0,0,0,0,0}, 7, 0},
-   {"skimmer",  {0,1,1,0,1,1,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"skua",     {0,1,1,0,1,1,1,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"slowworm", {0,0,1,0,0,0,1,1,1,1,0,0,0,1,0,0}, 3, 0},
-   {"slug",     {0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0}, 7, 0},
-   {"sole",     {0,0,1,0,0,1,0,1,1,0,0,1,0,1,0,0}, 4, 0},
-   {"sparrow",  {0,1,1,0,1,0,0,0,1,1,0,0,2,1,0,0}, 2, 0},
-   {"squirrel", {1,0,0,1,0,0,0,1,1,1,0,0,2,1,0,0}, 1, 0},
-   {"starfish", {0,0,1,0,0,1,1,0,0,0,0,0,5,0,0,0}, 7, 0},
-   {"stingray", {0,0,1,0,0,1,1,1,1,0,1,1,0,1,0,1}, 4, 0},
-   {"swan",     {0,1,1,0,1,1,0,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"termite",  {0,0,1,0,0,0,0,0,0,1,0,0,6,0,0,0}, 6, 0},
-   {"toad",     {0,0,1,0,0,1,0,1,1,1,0,0,4,0,0,0}, 5, 0},
-   {"tortoise", {0,0,1,0,0,0,0,0,1,1,0,0,4,1,0,1}, 3, 0},
-   {"tuatara",  {0,0,1,0,0,0,1,1,1,1,0,0,4,1,0,0}, 3, 0},
-   {"tuna",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,1}, 4, 0},
-   {"vampire",  {1,0,0,1,1,0,0,1,1,1,0,0,2,1,0,0}, 1, 0},
-   {"vole",     {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,0}, 1, 0},
-   {"vulture",  {0,1,1,0,1,0,1,0,1,1,0,0,2,1,0,1}, 2, 0},
-   {"wallaby",  {1,0,0,1,0,0,0,1,1,1,0,0,2,1,0,1}, 1, 0},
-   {"wasp",     {1,0,1,0,1,0,0,0,0,1,1,0,6,0,0,0}, 6, 0},
-   {"wolf",     {1,0,0,1,0,0,1,1,1,1,0,0,4,1,0,1}, 1, 0},
-   {"worm",     {0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0}, 7, 0},
-   {"wren",     {0,1,1,0,1,0,0,0,1,1,0,0,2,1,0,0}, 2, 0},
-
-   {"flea with teeth", 
-                {0,0,1,0,0,0,0,1,0,1,0,0,6,0,0,0}, 0, 0},
-   {"predator with hair", 
-                {0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0}, 0, 0},
-   {"six legged aquatic egg layer", 
-                {0,0,1,0,0,1,0,0,0,0,0,0,6,0,0,0}, 0, 0},
-
-};
-
+// {"aardvark", {1,0,0,1,0,0,1,1,1,1,0,0,4,0,0,1}, 1, 0},
+// {"antelope", {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
+// {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
+dataset_t *dataset;
 
 double distance( int i, int j )
 {
@@ -290,37 +185,106 @@ int dbscan( void )
    return cluster;
 }
 
-
-int main( void )
-{
-   int clusters;
-
-   clusters = dbscan( );
-
-   // emit classes
-   for ( int class = 1 ; class <= clusters ; class++ )
-   {
-      printf( "Class %d:\n", class );
-      for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
-      {
-         if ( dataset[ obs ].label == class )
-         {
-            printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
-         }
+void print_dataset(){
+   for(int i=0; i< OBSERVATIONS; i++){
+      printf("%d, %s, ", i, dataset[i].name);
+      
+      for(int j=0; j< FEATURES; j++){
+         printf("%d, ", dataset[i].features[j]);
       }
+
+      printf("%d, ", dataset[i].class);
+      printf("%d", dataset[i].label);
       printf("\n");
    }
 
-   // Emit outliers (NOISE)
-   printf( "NOISE\n" );
-   for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
-   {
-      if ( dataset[ obs ].label == NOISE )
-      {
-         printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
-      }
-   }
-   printf("\n");
+}
 
+int main( void )
+{
+   FILE *fp;
+   char buffer[10000];
+   char *pbuff;
+   char *ch;
+   char delim[] = ",";
+
+   dataset = (dataset_t *) malloc(sizeof(dataset_t)*OBSERVATIONS);
+
+   fp = fopen("./dataset.csv", "r");
+
+   int struct_counter = 0;
+   int observation_count = 0;
+
+   while (1) {
+      if (!fgets(buffer, sizeof buffer, fp)) break;
+      pbuff = buffer;
+
+      ch = strtok(pbuff, delim);
+
+      while (ch != NULL) {
+         if(struct_counter == 0){
+            dataset[observation_count].name = (char *)malloc(sizeof(char)*strlen(ch));
+            strcpy(dataset[observation_count].name, ch);
+         }
+         else if(struct_counter>=1 && struct_counter <= FEATURES){
+            dataset[observation_count].features[struct_counter - 1] = atoi(ch);
+         }
+         else if(struct_counter == FEATURES + 1){
+            dataset[observation_count].class = atoi(ch);
+         }
+         else if(struct_counter == FEATURES + 2){
+            dataset[observation_count].label = atoi(ch);
+         }
+         else{
+            assert(struct_counter <= FEATURES + 2);
+         }
+
+         ch = strtok(NULL, delim);
+         struct_counter++;
+      }
+
+      observation_count++;
+      struct_counter = 0;
+   }
+   
+   fclose(fp);
+   
+   // Freeing data structure
+   for(int i=0; i< OBSERVATIONS; i++){
+      free(dataset[i].name);
+   }
+
+   free(dataset);
    return 0;
+
+   // int clusters;
+
+   // clusters = dbscan( );
+
+   // // emit classes
+   // for ( int class = 1 ; class <= clusters ; class++ )
+   // {
+   //    printf( "Class %d:\n", class );
+   //    for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+   //    {
+   //       if ( dataset[ obs ].label == class )
+   //       {
+   //          printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+   //       }
+   //    }
+   //    printf("\n");
+   // }
+
+   // // Emit outliers (NOISE)
+   // printf( "NOISE\n" );
+   // for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+   // {
+   //    if ( dataset[ obs ].label == NOISE )
+   //    {
+   //       printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+   //    }
+   // }
+   // printf("\n");
+
+   // return 0;
 }

@@ -11,6 +11,7 @@
 #include "../include/utils.h"
 #include "../include/dbscan.h"
 
+
 bool file_exists (char *filename) {
   struct stat   buffer;   
   return (stat (filename, &buffer) == 0);

@@ -46,6 +46,12 @@ typedef struct neighbors_t {
 // {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
 dataset_t *dataset;
 
+// Globals for distance performance
+// int dst_call_count = 0;
+// unsigned long long dst_st = 0;
+// unsigned long long dst_et = 0;
+// unsigned long long dst_cycles = 0;
+
 unsigned long TOTAL_OBSERVATIONS;
 
 double distance( int i, int j );

@@ -5,19 +5,34 @@
 #include <math.h>
 #include <assert.h>
 
+#include <x86intrin.h>
+#include <immintrin.h>
+
 #include "../include/dbscan.h"
 #include "../include/utils.h"
 #include "../include/config.h"
 
 
+static __inline__ unsigned long long rdtsc(void) {
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+
 double distance( int i, int j )
 {
    double sum = 0.0;
+   // dst_call_count += 1;
 
+   // dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
+   // dst_et = rdtsc();
+   
+   // dst_cycles += (dst_et - dst_st);
 
    return sqrt( sum );
 }

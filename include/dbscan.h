@@ -12,7 +12,8 @@ typedef struct dataset_t {
 
 typedef struct neighbors_t {
    int neighbor_count;
-   int neighbor[ OBSERVATIONS ];
+   // int neighbor[ OBSERVATIONS ];
+   int *neighbor;
 } neighbors_t;
 
 #define SQR( x )    ( ( x ) * ( x ) )
@@ -45,9 +46,12 @@ typedef struct neighbors_t {
 // {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
 dataset_t *dataset;
 
+unsigned long TOTAL_OBSERVATIONS;
+
 double distance( int i, int j );
 
-neighbors_t *find_neighbors( int observation );
+// neighbors_t *find_neighbors( int observation );
+neighbors_t *find_neighbors( unsigned long observation );
 
 void free_neighbors( neighbors_t *neighbors );
 

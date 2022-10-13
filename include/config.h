@@ -2,6 +2,9 @@
 #define _config_h
 
 #define FILE_PATH "./data/dataset.csv"
+#define FILE_PATH_AUGMENTED "./data/augmented_dataset.csv"
+
+#define AUGMENT_FACTOR 3
 
 #define OBSERVATIONS	103
 #define FEATURES	16

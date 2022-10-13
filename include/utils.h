@@ -7,4 +7,6 @@ void load_dataset();
 
 void free_dataset();
 
+void augment_dataset();
+
 #endif

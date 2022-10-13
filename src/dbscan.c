@@ -9,6 +9,7 @@
 #include "../include/utils.h"
 #include "../include/config.h"
 
+
 double distance( int i, int j )
 {
    double sum = 0.0;
@@ -22,13 +23,14 @@ double distance( int i, int j )
 }
 
 
-neighbors_t *find_neighbors( int observation )
+neighbors_t *find_neighbors( unsigned long observation )
 {
    neighbors_t *neighbor = ( neighbors_t * )malloc( sizeof( neighbors_t ) );
+   neighbor->neighbor = ( int * )malloc( sizeof(int) * TOTAL_OBSERVATIONS);
 
-   bzero( (void *)neighbor, sizeof( neighbors_t ) );
+   bzero( (void *)neighbor->neighbor, sizeof( neighbors_t ) );
 
-   for ( int i = 0 ; i < OBSERVATIONS ; i++ )
+   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( i == observation ) continue;
 
@@ -45,6 +47,7 @@ neighbors_t *find_neighbors( int observation )
 
 void free_neighbors( neighbors_t *neighbors )
 {
+   free( neighbors->neighbor );
    free( neighbors );
 
    return;
@@ -52,7 +55,7 @@ void free_neighbors( neighbors_t *neighbors )
 
 void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 {
-   for ( int i = 0 ; i < OBSERVATIONS ; i++ )
+   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( neighbors->neighbor[ i ] )
       {
@@ -66,8 +69,9 @@ void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 
 void process_neighbors( int initial_point, neighbors_t *seed_set )
 {
+   
    // Process every member in the seed set.
-   for ( int i = 0 ; i < OBSERVATIONS ; i++ )
+   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       // Is this a neighbor?
       if ( seed_set->neighbor[ i ] )
@@ -104,7 +108,7 @@ int dbscan( void )
 {
    int cluster = 0;
 
-   for ( int i = 0 ; i < OBSERVATIONS ; i++ )
+   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( dataset[ i ].label != UNDEFINED ) continue;
 
@@ -130,10 +134,12 @@ int dbscan( void )
 
 
 void emit_classes(int clusters){
+   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+
    for ( int class = 1 ; class <= clusters ; class++ )
    {
       printf( "Class %d:\n", class );
-      for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+      for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
       {
          if ( dataset[ obs ].label == class )
          {
@@ -147,7 +153,8 @@ void emit_classes(int clusters){
 
 void emit_outliers(){
    printf( "NOISE\n" );
-   for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+   for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
    {
       if ( dataset[ obs ].label == NOISE )
       {

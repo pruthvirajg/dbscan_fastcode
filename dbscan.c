@@ -200,8 +200,7 @@ void print_dataset(){
 
 }
 
-int main( void )
-{
+void load_dataset(){
    FILE *fp;
    char buffer[10000];
    char *pbuff;
@@ -248,43 +247,53 @@ int main( void )
    }
    
    fclose(fp);
-   
-   // Freeing data structure
+
+}
+
+void free_dataset(){
    for(int i=0; i< OBSERVATIONS; i++){
       free(dataset[i].name);
    }
 
    free(dataset);
+
+}
+
+int main( void )
+{
+   int clusters;
+
+   load_dataset();
+
+   clusters = dbscan( );
+
+   // emit classes
+   for ( int class = 1 ; class <= clusters ; class++ )
+   {
+      printf( "Class %d:\n", class );
+      for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+      {
+         if ( dataset[ obs ].label == class )
+         {
+            printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+         }
+      }
+      printf("\n");
+   }
+
+   // Emit outliers (NOISE)
+   printf( "NOISE\n" );
+   for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
+   {
+      if ( dataset[ obs ].label == NOISE )
+      {
+         printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+      }
+   }
+   printf("\n");
+
+   free_dataset();
+
    return 0;
 
-   // int clusters;
-
-   // clusters = dbscan( );
-
-   // // emit classes
-   // for ( int class = 1 ; class <= clusters ; class++ )
-   // {
-   //    printf( "Class %d:\n", class );
-   //    for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
-   //    {
-   //       if ( dataset[ obs ].label == class )
-   //       {
-   //          printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
-   //       }
-   //    }
-   //    printf("\n");
-   // }
-
-   // // Emit outliers (NOISE)
-   // printf( "NOISE\n" );
-   // for ( int obs = 0 ; obs < OBSERVATIONS ; obs++ )
-   // {
-   //    if ( dataset[ obs ].label == NOISE )
-   //    {
-   //       printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
-   //    }
-   // }
-   // printf("\n");
-
-   // return 0;
 }

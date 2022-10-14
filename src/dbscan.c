@@ -20,7 +20,7 @@ static __inline__ unsigned long long rdtsc(void) {
 }
 
 
-double distance( int i, int j )
+double distance( unsigned long long i, unsigned long long j )
 {
    double sum = 0.0;
    dst_call_count += 1;
@@ -38,27 +38,31 @@ double distance( int i, int j )
 }
 
 
-neighbors_t *find_neighbors( unsigned long observation )
+neighbors_t *find_neighbors( unsigned long long observation )
 {
-   neighbors_t *neighbor = ( neighbors_t * )malloc( sizeof( neighbors_t ) );
-   neighbor->neighbor = ( int * )malloc( sizeof(int) * TOTAL_OBSERVATIONS);
+   #ifdef DEBUG
+   printf("find_neighbours\n");
+   #endif
+   
+   neighbors_t *neighbors = ( neighbors_t * )malloc( sizeof( neighbors_t ) );
+   neighbors->neighbor = ( int * )malloc( sizeof(int) * TOTAL_OBSERVATIONS);
 
    // bzero( (void *)neighbor, sizeof( neighbors_t ) );
-   neighbor->neighbor_count = 0;
-   bzero((void *)neighbor->neighbor, sizeof(int) * TOTAL_OBSERVATIONS);
+   neighbors->neighbor_count = 0;
+   bzero((void *)neighbors->neighbor, sizeof(int) * TOTAL_OBSERVATIONS);
 
-   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( i == observation ) continue;
 
       if ( distance( observation, i ) <= EPSILON )
       {
-         neighbor->neighbor[ i ] = 1;
-         neighbor->neighbor_count++;
+         neighbors->neighbor[ i ] = 1;
+         neighbors->neighbor_count++;
       }
    }
 
-   return neighbor;
+   return neighbors;
 }
 
 
@@ -72,7 +76,11 @@ void free_neighbors( neighbors_t *neighbors )
 
 void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 {
-   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   #ifdef DEBUG
+   printf("fold_neighbors\n");
+   #endif
+
+   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( neighbors->neighbor[ i ] )
       {
@@ -86,25 +94,37 @@ void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 
 void process_neighbors( int initial_point, neighbors_t *seed_set )
 {
-   
+   #ifdef DEBUG
+   printf("process_neighbors\n");
+   #endif
+
    // Process every member in the seed set.
-   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       // Is this a neighbor?
       if ( seed_set->neighbor[ i ] )
       {
          seed_set->neighbor[ i ] = 0;
 
-         if ( dataset[ i ].label == NOISE )
+         
+         if ( dataset[ i ].label != UNDEFINED || dataset[ initial_point ].label==NOISE)
          {
-            dataset[ i ].label = dataset[ initial_point ].label;
-         }
-         else if ( dataset[ i ].label != UNDEFINED )
-         {
+            // already labelled or initial_point is already NOISE, skip
             continue;
          }
+         else if ( dataset[ i ].label == NOISE )
+         {
+            // override NOISE with label
+            dataset[ i ].label = dataset[ initial_point ].label;
+         }
+         else{
+            // base case (is UNDEFINED) apply label
+            dataset[ i ].label = dataset[ initial_point ].label;
+         }
 
-         dataset[ i ].label = dataset[ initial_point ].label;
+         #ifdef DEBUG
+         printf("dataset[%llu]: %s, label:%d\n", i, dataset[i].name, dataset[i].label);
+         #endif
 
          neighbors_t *neighbors = find_neighbors( i );
 
@@ -125,10 +145,13 @@ int dbscan( void )
 {
    int cluster = 0;
 
-   for ( unsigned long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
+      #ifdef DEBUG
+      printf("Working on %llu,  %s\n", i, dataset[i].name);
+      #endif
       if ( dataset[ i ].label != UNDEFINED ) continue;
-
+      
       neighbors_t *neighbors = find_neighbors( i );
 
       if ( neighbors->neighbor_count < MINPTS )
@@ -140,7 +163,7 @@ int dbscan( void )
 
       // Create a new cluster.
       dataset[ i ].label = ++cluster;
-
+      
       process_neighbors( i, neighbors  );
 
       free_neighbors( neighbors );

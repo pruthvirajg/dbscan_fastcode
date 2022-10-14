@@ -105,12 +105,11 @@ void augment_dataset(){
 
    fp = fopen(FILE_PATH_AUGMENTED, "w");
 
-   for(int i=0; i< OBSERVATIONS; i++){
-      
-      feature_set = dataset[i].features;
-
-      for(int j=0; j<AUGMENT_FACTOR; j++){
-
+   for(int j=0; j<AUGMENT_FACTOR; j++){
+      for(int i=0; i< OBSERVATIONS; i++){
+         
+         feature_set = dataset[i].features;
+         
          sprintf(buffer, template, dataset[i].name, j, 
                                  feature_set[0],
                                  feature_set[1],

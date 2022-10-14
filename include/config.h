@@ -9,7 +9,7 @@
 #define MAX_FREQ        3.2
 #define BASE_FREQ       2.4
 
-#define AUGMENT_FACTOR  1
+#define AUGMENT_FACTOR  3
 
 #define OBSERVATIONS	103
 #define FEATURES	    16

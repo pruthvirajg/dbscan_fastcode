@@ -23,7 +23,7 @@ void print_dataset(){
       printf("%d, %s, ", i, dataset[i].name);
       
       for(int j=0; j< FEATURES; j++){
-         printf("%d, ", dataset[i].features[j]);
+         printf("%f, ", dataset[i].features[j]);
       }
 
       printf("%d, ", dataset[i].class);
@@ -70,7 +70,7 @@ void load_dataset(){
             strcpy(dataset[observation_count].name, ch);
          }
          else if(struct_counter>=1 && struct_counter <= FEATURES){
-            dataset[observation_count].features[struct_counter - 1] = atoi(ch);
+            dataset[observation_count].features[struct_counter - 1] = (DTYPE)atoi(ch);
          }
          else if(struct_counter == FEATURES + 1){
             dataset[observation_count].class = atoi(ch);
@@ -99,9 +99,9 @@ void augment_dataset(){
    
    FILE *fp;
    char buffer[10000];
-   char template[] = "%s_%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n";
+   char template[] = "%s_%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%d,%d\n";
    
-   int *feature_set;
+   DTYPE *feature_set;
 
    fp = fopen(FILE_PATH_AUGMENTED, "w");
 
@@ -109,7 +109,7 @@ void augment_dataset(){
       for(int i=0; i< OBSERVATIONS; i++){
          
          feature_set = dataset[i].features;
-         
+
          sprintf(buffer, template, dataset[i].name, j, 
                                  feature_set[0],
                                  feature_set[1],

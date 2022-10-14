@@ -5,7 +5,7 @@
 
 typedef struct dataset_t {
    char *name;
-   int  features[ FEATURES ];
+   DTYPE  features[ FEATURES ];
    int  class;
    int  label;
 } dataset_t;

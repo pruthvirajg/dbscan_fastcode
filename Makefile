@@ -18,3 +18,5 @@ assemble:
 	
 clean:
 	rm -f main augment ./data/augmented_dataset.csv
+	rm ./results/*
+	rm ./odump/*

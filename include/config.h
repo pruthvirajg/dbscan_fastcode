@@ -11,7 +11,7 @@
 
 #define AUGMENT_FACTOR  1
 
-#define OBSERVATIONS	103
+#define OBSERVATIONS	112
 #define FEATURES	    16
 
 #define UNDEFINED        0

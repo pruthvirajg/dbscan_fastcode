@@ -20,7 +20,7 @@ static __inline__ unsigned long long rdtsc(void) {
 }
 
 
-double distance( unsigned long long i, unsigned long long j )
+double ref_distance( unsigned long long i, unsigned long long j )
 {
    double sum = 0.0;
    dst_call_count += 1;
@@ -38,7 +38,7 @@ double distance( unsigned long long i, unsigned long long j )
 }
 
 
-neighbors_t *find_neighbors( unsigned long long observation )
+neighbors_t *ref_find_neighbors( unsigned long long observation )
 {
    #ifdef DEBUG
    printf("find_neighbours\n");
@@ -55,7 +55,7 @@ neighbors_t *find_neighbors( unsigned long long observation )
    {
       if ( i == observation ) continue;
 
-      if ( distance( observation, i ) <= EPSILON )
+      if ( ref_distance( observation, i ) <= EPSILON )
       {
          neighbors->neighbor[ i ] = 1;
          neighbors->neighbor_count++;
@@ -66,7 +66,7 @@ neighbors_t *find_neighbors( unsigned long long observation )
 }
 
 
-void free_neighbors( neighbors_t *neighbors )
+void ref_free_neighbors( neighbors_t *neighbors )
 {
    free( neighbors->neighbor );
    free( neighbors );
@@ -74,7 +74,7 @@ void free_neighbors( neighbors_t *neighbors )
    return;
 }
 
-void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
+void ref_fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 {
    #ifdef DEBUG
    printf("fold_neighbors\n");
@@ -92,7 +92,7 @@ void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
 }
 
 
-void process_neighbors( int initial_point, neighbors_t *seed_set )
+void ref_process_neighbors( int initial_point, neighbors_t *seed_set )
 {
    #ifdef DEBUG
    printf("process_neighbors\n");
@@ -126,14 +126,14 @@ void process_neighbors( int initial_point, neighbors_t *seed_set )
          printf("dataset[%llu]: %s, label:%d\n", i, dataset[i].name, dataset[i].label);
          #endif
 
-         neighbors_t *neighbors = find_neighbors( i );
+         neighbors_t *neighbors = ref_find_neighbors( i );
 
          if ( neighbors->neighbor_count >= MINPTS )
          {
-            fold_neighbors( seed_set, neighbors );
+            ref_fold_neighbors( seed_set, neighbors );
             i = 0;
          }
-         free_neighbors( neighbors );
+         ref_free_neighbors( neighbors );
       }
    }
 
@@ -141,7 +141,7 @@ void process_neighbors( int initial_point, neighbors_t *seed_set )
 }
 
 
-int dbscan( void )
+int ref_dbscan( void )
 {
    int cluster = 0;
 
@@ -152,21 +152,21 @@ int dbscan( void )
       #endif
       if ( dataset[ i ].label != UNDEFINED ) continue;
       
-      neighbors_t *neighbors = find_neighbors( i );
+      neighbors_t *neighbors = ref_find_neighbors( i );
 
       if ( neighbors->neighbor_count < MINPTS )
       {
          dataset[ i ].label = NOISE;
-         free_neighbors( neighbors );
+         ref_free_neighbors( neighbors );
          continue;
       }
 
       // Create a new cluster.
       dataset[ i ].label = ++cluster;
       
-      process_neighbors( i, neighbors  );
+      ref_process_neighbors( i, neighbors  );
 
-      free_neighbors( neighbors );
+      ref_free_neighbors( neighbors );
    }
 
    return cluster;

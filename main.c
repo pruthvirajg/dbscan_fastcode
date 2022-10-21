@@ -37,7 +37,7 @@ int main( void )
 
       st = rdtsc();
       
-      clusters = dbscan( );
+      clusters = ref_dbscan( );
 
       et = rdtsc();
 

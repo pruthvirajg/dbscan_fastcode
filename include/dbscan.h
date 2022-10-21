@@ -54,18 +54,18 @@ unsigned long long dst_cycles;
 
 unsigned long TOTAL_OBSERVATIONS;
 
-double distance( unsigned long long i, unsigned long long j );
+double ref_distance( unsigned long long i, unsigned long long j );
 
 // neighbors_t *find_neighbors( int observation );
-neighbors_t *find_neighbors( unsigned long long observation );
+neighbors_t *ref_find_neighbors( unsigned long long observation );
 
-void free_neighbors( neighbors_t *neighbors );
+void ref_free_neighbors( neighbors_t *neighbors );
 
-void fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors );
+void ref_fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors );
 
-void process_neighbors( int initial_point, neighbors_t *seed_set );
+void ref_process_neighbors( int initial_point, neighbors_t *seed_set );
 
-int dbscan( void );
+int ref_dbscan( void );
 
 void emit_classes(int clusters);
 

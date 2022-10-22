@@ -188,6 +188,23 @@ int acc_dbscan( void )
    // TODO: Replace this with accelerated distance calc kernel
    gen_epsilon_matrix();
 
+   #ifdef DUMP_EPSILON_MAT
+   FILE *fp;
+   fp = fopen("./epsilon_matrix.csv", "w");
+   char buffer[10000];
+   char template[] = "%d,";
+
+   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         sprintf(buffer, template, epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
+         fputs(buffer, fp);
+      }
+      fputs("\n", fp);
+   }
+
+   fclose(fp);
+   #endif
+
    // Reduction along the rows to check if row has > MIN_PTS
    min_pts_check();
 

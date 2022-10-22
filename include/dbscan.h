@@ -2,6 +2,7 @@
 #define _dbscan_h
 
 #include "../include/config.h"
+#include <stdbool.h>
 
 typedef struct dataset_t {
    char *name;
@@ -54,9 +55,15 @@ unsigned long long dst_cycles;
 
 unsigned long TOTAL_OBSERVATIONS;
 
-double ref_distance( unsigned long long i, unsigned long long j );
+float EPSILON_SQUARE;
 
-// neighbors_t *find_neighbors( int observation );
+int *epsilon_matrix;
+
+bool *min_pts_vector;
+
+// double ref_distance( unsigned long long i, unsigned long long j );
+float ref_distance( unsigned long long i, unsigned long long j );
+
 neighbors_t *ref_find_neighbors( unsigned long long observation );
 
 void ref_free_neighbors( neighbors_t *neighbors );
@@ -67,6 +74,18 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set );
 
 int ref_dbscan( void );
 
+// Functions for accelerated DBSCAN
+int acc_dbscan( void );
+
+int acc_distance( unsigned long long i, unsigned long long j );
+
+void gen_epsilon_matrix(void);
+
+void min_pts_check(void);
+
+void class_label(void);
+
+// Utilities
 void emit_classes(int clusters);
 
 void emit_outliers();

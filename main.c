@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "./include/dbscan.h"
 #include "./include/utils.h"
@@ -13,6 +15,7 @@ static __inline__ unsigned long long rdtsc(void) {
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
+#define ACC_DBSCAN 1
 
 int main( void )
 {
@@ -28,16 +31,34 @@ int main( void )
 
    int clusters;
 
+   EPSILON_SQUARE = EPSILON * EPSILON;
+
    load_dataset();
    
+   // allocate memory for epsilon_matrix
+   epsilon_matrix = (int *) malloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS * sizeof(int));
+   if (epsilon_matrix == NULL) {
+         printf("epsilon_matrix memory not allocated.\n");
+         exit(0);
+   }
+   
+   min_pts_vector = (bool *) malloc(sizeof(bool) * TOTAL_OBSERVATIONS);
+   if (min_pts_vector == NULL) {
+         printf("min_pts_vector memory not allocated.\n");
+         exit(0);
+   }
+
    // Profile for N runs
    unsigned long long runs = (unsigned long long) NUM_RUNS;
 
    for(unsigned long long i = 0; i < runs; i++){
 
       st = rdtsc();
-      
-      clusters = ref_dbscan( );
+      #ifdef ACC_DBSCAN
+         clusters = acc_dbscan();
+      #else
+         clusters = ref_dbscan( );
+      #endif
 
       et = rdtsc();
 
@@ -61,7 +82,9 @@ int main( void )
    // Emit outliers (NOISE)
    emit_outliers();
 
+   // free all memory
    free_dataset();
+   free(epsilon_matrix);
 
    // Dataset
    printf("Dataset Metrics:\n");
@@ -100,7 +123,7 @@ int main( void )
    printf("Number of operations peformed in each run of DBSCAN is %llu\n", (dst_call_count/runs)*3);
    printf("Total number of cycles spent in the core distance function is %llu\n", (dst_cycles/runs));
    printf("Baseline FLOPS/Cycle = %f\n", (dst_call_count*3.0) / (dst_cycles));
-   printf("Baseline GFLOPS/Second = %f", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
+   printf("Baseline GFLOPS/Second = %f\n", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
 
    return 0;
 

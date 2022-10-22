@@ -83,7 +83,7 @@ void gen_epsilon_matrix(void);
 
 void min_pts_check(void);
 
-void class_label(void);
+int class_label(void);
 
 // Utilities
 void emit_classes(int clusters);

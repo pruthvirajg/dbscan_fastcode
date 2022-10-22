@@ -15,7 +15,7 @@ static __inline__ unsigned long long rdtsc(void) {
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
-#define ACC_DBSCAN 1
+// #define ACC_DBSCAN 1
 
 int main( void )
 {
@@ -69,9 +69,19 @@ int main( void )
          if(i == (runs-1)){
             break;
          }
-         dataset[j].label = UNDEFINED;
+
+         #ifdef ACC_DBSCAN
+            dataset[j].label = NOISE;
+         #else
+            dataset[j].label = UNDEFINED;
+         #endif
       }
 
+      free(epsilon_matrix);
+      free(min_pts_vector);
+
+      epsilon_matrix = (int *) malloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS * sizeof(int));
+      min_pts_vector = (bool *) malloc(sizeof(bool) * TOTAL_OBSERVATIONS);
    }
 
    dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;

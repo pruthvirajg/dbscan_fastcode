@@ -76,7 +76,11 @@ void load_dataset(){
             dataset[observation_count].class = atoi(ch);
          }
          else if(struct_counter == FEATURES + 2){
-            dataset[observation_count].label = atoi(ch);
+            #ifdef ACC_DBSCAN
+               dataset[observation_count].label = NOISE;
+            #else
+               dataset[observation_count].label = atoi(ch);
+            #endif
          }
          else{
             assert(struct_counter <= FEATURES + 2);

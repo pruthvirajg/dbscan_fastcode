@@ -180,6 +180,7 @@ int ref_dbscan( void )
 int acc_dbscan( void )
 {
    int clusters = 0;
+
    /***
     * Re-written schedule for DBSCAN to support acceleration
    */
@@ -207,9 +208,9 @@ int acc_dbscan( void )
 
    // Reduction along the rows to check if row has > MIN_PTS
    min_pts_check();
-
+   
    // Label all points
-   // class_label();
+   clusters = class_label();
    return clusters;
 }
 
@@ -252,7 +253,7 @@ void gen_epsilon_matrix(void){
 
 void min_pts_check(void){
    unsigned long long num_valid_points = 0;
-
+   
    // Reduction along the rows to check if row has > MIN_PTS
    for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
       // For each row check if MIN_PTS is met
@@ -260,17 +261,39 @@ void min_pts_check(void){
 
       for (unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
          if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j] == 1){
-            num_valid_points++;
+            num_valid_points+=1;
          }
       }
-
+      
       min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
    }
 }
 
 
-void class_label(void){
+int class_label(void){
    // Label all points
+
+   int cluster = 0;
+   int core_pt_label = UNDEFINED;
+
+   // For each entry in min_pts_vector
+   for(int i=0; i< TOTAL_OBSERVATIONS; i++){
+      if(min_pts_vector[i] == false) continue;
+      
+      // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
+      core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
+      dataset[i].label = core_pt_label;
+      for(int j=0; j< TOTAL_OBSERVATIONS; j++){
+         if (dataset[j].label != NOISE) continue;
+
+         // Create a new cluster
+         if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j]){
+            dataset[j].label = core_pt_label;
+         }
+      }
+   }
+
+   return cluster;
 }
 
 

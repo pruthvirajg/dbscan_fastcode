@@ -53,7 +53,7 @@ unsigned long long dst_st;
 unsigned long long dst_et;
 unsigned long long dst_cycles;
 
-unsigned long TOTAL_OBSERVATIONS;
+DTYPE_OBS TOTAL_OBSERVATIONS;
 
 float EPSILON_SQUARE;
 
@@ -61,10 +61,9 @@ bool *epsilon_matrix;
 
 bool *min_pts_vector;
 
-// double ref_distance( unsigned long long i, unsigned long long j );
-float ref_distance( unsigned long long i, unsigned long long j );
+float ref_distance(DTYPE_OBS i, DTYPE_OBS j );
 
-neighbors_t *ref_find_neighbors( unsigned long long observation );
+neighbors_t *ref_find_neighbors(DTYPE_OBS observation );
 
 void ref_free_neighbors( neighbors_t *neighbors );
 
@@ -77,11 +76,13 @@ int ref_dbscan( void );
 // Functions for accelerated DBSCAN
 int acc_dbscan( void );
 
-bool acc_distance( unsigned long long i, unsigned long long j );
+bool acc_distance(DTYPE_OBS i, DTYPE_OBS j );
 
 void gen_epsilon_matrix(void);
 
 void min_pts_check(void);
+
+void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label);
 
 int class_label(void);
 

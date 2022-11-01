@@ -98,7 +98,7 @@ int main( void )
 
    // Dataset
    printf("Dataset Metrics:\n");
-   printf("Number of datapoints: %lu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
+   printf("Number of datapoints: %llu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
 
    // For N runs
    printf("Performance Metrics Over N = %llu Runs:\n", runs);

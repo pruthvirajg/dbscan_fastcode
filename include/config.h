@@ -27,5 +27,9 @@
 #define EPSILON          1.70
 #define MINPTS           4
 
+// datatype of feature space
 #define DTYPE float
+
+// datatype of observations iterator
+#define DTYPE_OBS unsigned long long
 #endif

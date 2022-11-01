@@ -21,7 +21,7 @@ static __inline__ unsigned long long rdtsc(void) {
 }
 
 
-float ref_distance( unsigned long long i, unsigned long long j )
+float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    float sum = 0.0;
    dst_call_count += 1;
@@ -39,7 +39,7 @@ float ref_distance( unsigned long long i, unsigned long long j )
 }
 
 
-neighbors_t *ref_find_neighbors( unsigned long long observation )
+neighbors_t *ref_find_neighbors(DTYPE_OBS observation )
 {
    #ifdef DEBUG
    printf("find_neighbours\n");
@@ -52,7 +52,7 @@ neighbors_t *ref_find_neighbors( unsigned long long observation )
    neighbors->neighbor_count = 0;
    bzero((void *)neighbors->neighbor, sizeof(int) * TOTAL_OBSERVATIONS);
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( i == observation ) continue;
 
@@ -81,7 +81,7 @@ void ref_fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
    printf("fold_neighbors\n");
    #endif
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( neighbors->neighbor[ i ] )
       {
@@ -100,7 +100,7 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set )
    #endif
 
    // Process every member in the seed set.
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       // Is this a neighbor?
       if ( seed_set->neighbor[ i ] )
@@ -149,7 +149,7 @@ int ref_dbscan( void )
    */
    int cluster = 0;
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       #ifdef DEBUG
       printf("Working on %llu,  %s\n", i, dataset[i].name);
@@ -195,8 +195,8 @@ int acc_dbscan( void )
    char buffer[10000];
    char template[] = "%d,";
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
-      for (unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
          sprintf(buffer, template, epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
          fputs(buffer, fp);
       }
@@ -215,7 +215,7 @@ int acc_dbscan( void )
 }
 
 
-bool acc_distance( unsigned long long i, unsigned long long j )
+bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    // reference implementation for SIMD distance
    float distance = 0.0;
@@ -239,8 +239,8 @@ bool acc_distance( unsigned long long i, unsigned long long j )
 void gen_epsilon_matrix(void){
    // Calculate the distance and generate square epsilon matrix
    // ASSUMPTION calculating for all pairs of points including itself
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
-      for ( unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
          #ifdef DEBUG
          printf("Working on %llu,  %s\n", i, dataset[i].name);
          #endif
@@ -252,14 +252,14 @@ void gen_epsilon_matrix(void){
 
 
 void min_pts_check(void){
-   unsigned long long num_valid_points = 0;
+  DTYPE_OBS num_valid_points = 0;
    
    // Reduction along the rows to check if row has > MIN_PTS
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
       // For each row check if MIN_PTS is met
       num_valid_points = 0;
 
-      for (unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
          if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j] == 1){
             num_valid_points+=1;
          }
@@ -277,35 +277,41 @@ int class_label(void){
    int core_pt_label = UNDEFINED;
 
    // For each entry in min_pts_vector
-   for(int i=0; i< TOTAL_OBSERVATIONS; i++){
+   for(DTYPE_OBS i=0; i< TOTAL_OBSERVATIONS; i++){
       if(min_pts_vector[i] == false) continue;
-      
-      // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
-      // maintain a queue of neighbours that are 1, visit those and label neighbour of neighbours
-      // for every row completely visited, set the associated visited(?) entry to 0
       core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
       dataset[i].label = core_pt_label;
-      for(int j=0; j< TOTAL_OBSERVATIONS; j++){
-         if (dataset[j].label != NOISE) continue;
-
-         // Assign neighbout to the cluster
-         if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j]){
-            dataset[j].label = core_pt_label;
-         }
-      }
+      
+      // labelling all (direct density reachable) neighbours of core point
+      traverse_row(i, cluster, core_pt_label);
+      
    }
 
    return cluster;
 }
 
+void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
+   // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
+   // maintain a queue of neighbours that are 1, visit those and label neighbour of neighbours
+   // for every row completely visited, set the associated visited(?) entry to 0
+   
+   for(int j=0; j< TOTAL_OBSERVATIONS; j++){
+      if (dataset[j].label != NOISE) continue;
+
+      // Assign neighbout to the cluster
+      if(epsilon_matrix[row_index*TOTAL_OBSERVATIONS + j]){
+         dataset[j].label = core_pt_label;
+      }
+   }
+}
 
 void emit_classes(int clusters){
-   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+   DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
 
    for ( int class = 1 ; class <= clusters ; class++ )
    {
       printf( "Class %d:\n", class );
-      for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
+      for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
       {
          if ( dataset[ obs ].label == class )
          {
@@ -319,8 +325,8 @@ void emit_classes(int clusters){
 
 void emit_outliers(){
    printf( "NOISE\n" );
-   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
-   for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
+   DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+   for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
    {
       if ( dataset[ obs ].label == NOISE )
       {

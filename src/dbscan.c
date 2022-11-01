@@ -14,7 +14,6 @@
 #include "../include/config.h"
 #include "../include/queue.h"
 
-
 static __inline__ unsigned long long rdtsc(void) {
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
@@ -247,6 +246,7 @@ void gen_epsilon_matrix(void){
          #endif
 
          epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
+         
       }
    }
 }
@@ -280,6 +280,7 @@ int class_label(void){
    // For each entry in min_pts_vector
    for(DTYPE_OBS i=0; i< TOTAL_OBSERVATIONS; i++){
       if(min_pts_vector[i] == false) continue;
+      
       core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
       
       dataset[i].label = core_pt_label;
@@ -305,14 +306,15 @@ void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
       // Assign neighbour to the cluster
       if(epsilon_matrix[row_index*TOTAL_OBSERVATIONS + j]){
          dataset[j].label = core_pt_label;
-      }
+      
 
-      if(!traverse_mask[j]){
-         // if not yet traversed, add row_index to N_List
-         queue_insert_tail(N_List, j);
+         if(!traverse_mask[j]){
+            // if not yet traversed, add row_index to N_List
+            queue_insert_tail(N_List, j);
 
-         // set traverse_mask
-         traverse_mask[j] = 1;
+            // set traverse_mask
+            traverse_mask[j] = 1;
+         }
       }
    }
 

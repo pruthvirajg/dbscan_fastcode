@@ -12,6 +12,7 @@
 #include "../include/dbscan.h"
 #include "../include/utils.h"
 #include "../include/config.h"
+#include "../include/queue.h"
 
 
 static __inline__ unsigned long long rdtsc(void) {
@@ -294,7 +295,8 @@ void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
    // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
    // maintain a queue of neighbours that are 1, visit those and label neighbour of neighbours
    // for every row completely visited, set the associated visited(?) entry to 0
-   
+   queue_t *N_List = queue_new();
+
    for(int j=0; j< TOTAL_OBSERVATIONS; j++){
       if (dataset[j].label != NOISE) continue;
 
@@ -303,6 +305,8 @@ void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
          dataset[j].label = core_pt_label;
       }
    }
+
+   queue_free(N_List);
 }
 
 void emit_classes(int clusters){

@@ -36,13 +36,13 @@ int main( void )
    load_dataset();
    
    // allocate memory for epsilon_matrix
-   epsilon_matrix = (int *) malloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS * sizeof(int));
+   epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
    if (epsilon_matrix == NULL) {
          printf("epsilon_matrix memory not allocated.\n");
          exit(0);
    }
    
-   min_pts_vector = (bool *) malloc(sizeof(bool) * TOTAL_OBSERVATIONS);
+   min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    if (min_pts_vector == NULL) {
          printf("min_pts_vector memory not allocated.\n");
          exit(0);
@@ -80,8 +80,8 @@ int main( void )
       free(epsilon_matrix);
       free(min_pts_vector);
 
-      epsilon_matrix = (int *) malloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS * sizeof(int));
-      min_pts_vector = (bool *) malloc(sizeof(bool) * TOTAL_OBSERVATIONS);
+      epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+      min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    }
 
    dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;

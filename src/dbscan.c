@@ -215,7 +215,7 @@ int acc_dbscan( void )
 }
 
 
-int acc_distance( unsigned long long i, unsigned long long j )
+bool acc_distance( unsigned long long i, unsigned long long j )
 {
    // reference implementation for SIMD distance
    float distance = 0.0;
@@ -237,7 +237,7 @@ int acc_distance( unsigned long long i, unsigned long long j )
 
 
 void gen_epsilon_matrix(void){
-   // Calculate the distance and generate epsilon matrix
+   // Calculate the distance and generate square epsilon matrix
    // ASSUMPTION calculating for all pairs of points including itself
    for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
       for ( unsigned long long j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
@@ -281,12 +281,14 @@ int class_label(void){
       if(min_pts_vector[i] == false) continue;
       
       // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
+      // maintain a queue of neighbours that are 1, visit those and label neighbour of neighbours
+      // for every row completely visited, set the associated visited(?) entry to 0
       core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
       dataset[i].label = core_pt_label;
       for(int j=0; j< TOTAL_OBSERVATIONS; j++){
          if (dataset[j].label != NOISE) continue;
 
-         // Create a new cluster
+         // Assign neighbout to the cluster
          if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j]){
             dataset[j].label = core_pt_label;
          }

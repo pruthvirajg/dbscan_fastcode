@@ -57,7 +57,7 @@ unsigned long TOTAL_OBSERVATIONS;
 
 float EPSILON_SQUARE;
 
-int *epsilon_matrix;
+bool *epsilon_matrix;
 
 bool *min_pts_vector;
 
@@ -77,7 +77,7 @@ int ref_dbscan( void );
 // Functions for accelerated DBSCAN
 int acc_dbscan( void );
 
-int acc_distance( unsigned long long i, unsigned long long j );
+bool acc_distance( unsigned long long i, unsigned long long j );
 
 void gen_epsilon_matrix(void);
 

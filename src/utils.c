@@ -11,7 +11,6 @@
 #include "../include/utils.h"
 #include "../include/dbscan.h"
 
-
 bool file_exists (char *filename) {
   struct stat   buffer;   
   return (stat (filename, &buffer) == 0);
@@ -50,7 +49,7 @@ void load_dataset(){
       fp = fopen(FILE_PATH_AUGMENTED, "r");
 
    } else{
-      printf("%s does not exit, loading file %s\n", FILE_PATH_AUGMENTED, FILE_PATH);
+      printf("%s does not exist, loading file %s\n", FILE_PATH_AUGMENTED, FILE_PATH);
       fp = fopen(FILE_PATH, "r");
       TOTAL_OBSERVATIONS = OBSERVATIONS;
    }
@@ -76,11 +75,8 @@ void load_dataset(){
             dataset[observation_count].class = atoi(ch);
          }
          else if(struct_counter == FEATURES + 2){
-            #ifdef ACC_DBSCAN
-               dataset[observation_count].label = NOISE;
-            #else
-               dataset[observation_count].label = atoi(ch);
-            #endif
+               dataset[observation_count].label = ACC_DBSCAN ? NOISE : atoi(ch);
+            
          }
          else{
             assert(struct_counter <= FEATURES + 2);

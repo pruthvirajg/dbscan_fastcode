@@ -281,9 +281,11 @@ int class_label(void){
    for(DTYPE_OBS i=0; i< TOTAL_OBSERVATIONS; i++){
       if(min_pts_vector[i] == false) continue;
       core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
+      
       dataset[i].label = core_pt_label;
       
       // labelling all (direct density reachable) neighbours of core point
+      traverse_mask[i] = 1;
       traverse_row(i, cluster, core_pt_label);
       
    }
@@ -300,14 +302,29 @@ void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
    for(int j=0; j< TOTAL_OBSERVATIONS; j++){
       if (dataset[j].label != NOISE) continue;
 
-      // Assign neighbout to the cluster
+      // Assign neighbour to the cluster
       if(epsilon_matrix[row_index*TOTAL_OBSERVATIONS + j]){
          dataset[j].label = core_pt_label;
       }
+
+      if(!traverse_mask[j]){
+         // if not yet traversed, add row_index to N_List
+         queue_insert_tail(N_List, j);
+
+         // set traverse_mask
+         traverse_mask[j] = 1;
+      }
+   }
+
+   // process neighbours to label density reachable points
+   while(queue_size(N_List) != 0){
+      traverse_row(N_List->head->row_index, cluster, core_pt_label);
+      queue_remove_head(N_List);
    }
 
    queue_free(N_List);
 }
+
 
 void emit_classes(int clusters){
    DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;

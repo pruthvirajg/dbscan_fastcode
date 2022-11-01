@@ -8,16 +8,13 @@
 #include "./include/utils.h"
 #include "./include/config.h"
 
-
 static __inline__ unsigned long long rdtsc(void) {
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
-// #define ACC_DBSCAN 1
-
-int main( void )
+int main(int argc, char** argv)
 {
    unsigned long long cycles = 0;
    unsigned long long st = 0;
@@ -31,6 +28,17 @@ int main( void )
 
    int clusters;
 
+   // get cmd line arg to run ref-dbscan or acc-dbscan
+   if(argc == 2 && atoi(argv[1]) == 1){
+      ACC_DBSCAN = true;
+      printf("Running acc_dbscan()\n");
+   }
+   else{
+      ACC_DBSCAN = false;
+      printf("Running ref_dbscan() \n");
+   }
+
+
    EPSILON_SQUARE = EPSILON * EPSILON;
 
    load_dataset();
@@ -42,11 +50,15 @@ int main( void )
          exit(0);
    }
    
+   // allocate memory for min_pts_vector
    min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    if (min_pts_vector == NULL) {
          printf("min_pts_vector memory not allocated.\n");
          exit(0);
    }
+
+   // allocate memory for class label row traverse_mask
+   traverse_mask = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
 
    // Profile for N runs
    unsigned long long runs = (unsigned long long) NUM_RUNS;
@@ -54,11 +66,7 @@ int main( void )
    for(unsigned long long i = 0; i < runs; i++){
 
       st = rdtsc();
-      #ifdef ACC_DBSCAN
-         clusters = acc_dbscan();
-      #else
-         clusters = ref_dbscan( );
-      #endif
+      clusters = ACC_DBSCAN ? acc_dbscan() : ref_dbscan( );
 
       et = rdtsc();
 
@@ -70,11 +78,9 @@ int main( void )
             break;
          }
 
-         #ifdef ACC_DBSCAN
-            dataset[j].label = NOISE;
-         #else
-            dataset[j].label = UNDEFINED;
-         #endif
+         
+         dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
+         
       }
 
       free(epsilon_matrix);

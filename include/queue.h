@@ -10,6 +10,7 @@
  */
 
 #include <stdbool.h>
+#include "config.h"
 
 /************** Data structure declarations ****************/
 
@@ -25,7 +26,7 @@ typedef struct list_ele {
      * The memory for this string should be explicitly allocated and freed
      * whenever an element is inserted and removed from the queue.
      */
-    char *value;
+    DTYPE_OBS row_index;
 
     /**
      * @brief Pointer to the next element in the linked list.
@@ -51,7 +52,7 @@ typedef struct {
      * TODO: You will need to add more fields to this structure
      *       to efficiently implement q_size and q_insert_tail
      */
-    int row_index; // stores index of row
+    int qSize; // stores index of row
 
 } queue_t;
 
@@ -64,13 +65,13 @@ queue_t *queue_new(void);
 void queue_free(queue_t *q);
 
 /* Attempt to insert element at head of queue. */
-bool queue_insert_head(queue_t *q, const char *s);
+bool queue_insert_head(queue_t *q, DTYPE_OBS row_index);
 
 /* Attempt to insert element at tail of queue. */
-bool queue_insert_tail(queue_t *q, const char *s);
+bool queue_insert_tail(queue_t *q, DTYPE_OBS row_index);
 
 /* Attempt to remove element from head of queue. */
-bool queue_remove_head(queue_t *q, char *sp, size_t bufsize);
+bool queue_remove_head(queue_t *q);
 
 /* Return number of elements in queue. */
 size_t queue_size(queue_t *q);

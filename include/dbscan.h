@@ -4,6 +4,8 @@
 #include "../include/config.h"
 #include <stdbool.h>
 
+bool ACC_DBSCAN;
+
 typedef struct dataset_t {
    char *name;
    DTYPE  features[ FEATURES ];
@@ -60,6 +62,8 @@ float EPSILON_SQUARE;
 bool *epsilon_matrix;
 
 bool *min_pts_vector;
+
+bool *traverse_mask;
 
 float ref_distance(DTYPE_OBS i, DTYPE_OBS j );
 

@@ -33,7 +33,7 @@ queue_t *queue_new(void) {
 
     q->head = NULL;
     q->tail = NULL;
-    q->row_index = 0;
+    q->qSize = 0;
 
     return q;
 }
@@ -44,14 +44,13 @@ queue_t *queue_new(void) {
  */
 void queue_free(queue_t *q) {
     if (q != NULL) {
-        if (q->row_index > 0) {
+        if (q->qSize > 0) {
             /* How about freeing the list elements and the strings? */
             list_ele_t *current = q->head;
             list_ele_t *nextVal;
 
             while (current != NULL) {
                 nextVal = current->next;
-                free(current->value);
                 free(current);
                 current = nextVal;
             }
@@ -73,7 +72,7 @@ void queue_free(queue_t *q) {
  * @return true if insertion was successful
  * @return false if q is NULL, or memory allocation failed
  */
-bool queue_insert_head(queue_t *q, const char *s) {
+bool queue_insert_head(queue_t *q, DTYPE_OBS row_index) {
     list_ele_t *newh;
 
     /* What should you do if the q is NULL? */
@@ -89,26 +88,18 @@ bool queue_insert_head(queue_t *q, const char *s) {
             return false;
 
         } else {
-            newh->value = malloc((strlen(s) + 1));
-
-            if (newh->value == NULL) {
-                free(newh);
-                return false;
-            } else {
-                memset(newh->value, '\0', strlen(s) + 1);
-                strcpy(newh->value, s);
+                newh->row_index = row_index;
 
                 newh->next = q->head;
                 q->head = newh;
 
                 // incrementing the size
-                q->row_index += 1;
+                q->qSize += 1;
 
                 // update tail pointer when first element is added
-                if (q->row_index == 1) {
+                if (q->qSize == 1) {
                     q->tail = newh;
                 }
-            }
         }
     }
     return true;
@@ -126,7 +117,7 @@ bool queue_insert_head(queue_t *q, const char *s) {
  * @return true if insertion was successful
  * @return false if q is NULL, or memory allocation failed
  */
-bool queue_insert_tail(queue_t *q, const char *s) {
+bool queue_insert_tail(queue_t *q, DTYPE_OBS row_index) {
     /* You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
 
@@ -139,27 +130,20 @@ bool queue_insert_tail(queue_t *q, const char *s) {
         if (tailVal == NULL) {
             return false;
         } else {
-            tailVal->value = malloc((strlen(s) + 1));
 
-            if (q->row_index == 0) {
-                if (tailVal->value == NULL) {
-                    free(tailVal);
-                    return false;
-                } else {
-                    memset(tailVal->value, '\0', strlen(s) + 1);
-                    strcpy(tailVal->value, s);
-                    tailVal->next = NULL;
-                    // tail itself in NULL in the base case, needs assignment
-                    q->tail = tailVal;
-                }
+            if (q->qSize == 0) {
+
+                tailVal->row_index = row_index;
+                tailVal->next = NULL;
+                // tail itself in NULL in the base case, needs assignment
+                q->tail = tailVal;
+                
             } else {
-                if (!tailVal->value) {
-                    free(tailVal);
-                    return false;
-                } else {
-                    memset(tailVal->value, '\0', strlen(s) + 1);
-
-                    strcpy(tailVal->value, s);
+                // if (!tailVal->row_index) {
+                //     free(tailVal);
+                //     return false;
+                // } else {
+                    tailVal->row_index = row_index;
 
                     tailVal->next = NULL;
 
@@ -167,14 +151,14 @@ bool queue_insert_tail(queue_t *q, const char *s) {
                     // new value
                     q->tail->next = tailVal;
                     q->tail = tailVal;
-                }
+                // }
             }
 
             // incrementing the size
-            q->row_index += 1;
+            q->qSize += 1;
 
             // update head pointer when first element is added
-            if (q->row_index == 1) {
+            if (q->qSize == 1) {
                 q->head = tailVal;
             }
 
@@ -200,9 +184,9 @@ bool queue_insert_tail(queue_t *q, const char *s) {
  * @return true if removal succeeded
  * @return false if q is NULL or empty
  */
-bool queue_remove_head(queue_t *q, char *buf, size_t bufsize) {
+bool queue_remove_head(queue_t *q){//}, char *buf, size_t bufsize) {
     /* You need to fix up this code. */
-    if (q == NULL || q->row_index == 0) {
+    if (q == NULL || q->qSize == 0) {
         return false;
     }
 
@@ -210,21 +194,21 @@ bool queue_remove_head(queue_t *q, char *buf, size_t bufsize) {
     current = q->head;
     q->head = q->head->next;
 
-    if (bufsize > 0 && buf != NULL) {
-        // copies n elements into buffer
-        strncpy(buf, current->value, bufsize);
-        buf[bufsize - 1] = '\0';
-    }
+    // if (bufsize > 0 && buf != NULL) {
+    //     // copies n elements into buffer
+    //     strncpy(buf, current->row_index, bufsize);
+    //     buf[bufsize - 1] = '\0';
+    // }
 
-    q->row_index -= 1;
+    q->qSize -= 1;
 
     // handle the case where entire queue is deleted by tail points to
     // irrelevant memory location
-    if (q->row_index == 0) {
+    if (q->qSize == 0) {
         q->tail = NULL;
     }
 
-    free(current->value);
+    // free(current->row_index);
     free(current);
 
     return true;
@@ -243,10 +227,10 @@ bool queue_remove_head(queue_t *q, char *buf, size_t bufsize) {
 size_t queue_size(queue_t *q) {
     /* You need to write the code for this function */
     /* Remember: It should operate in O(1) time */
-    if (q == NULL || q->row_index == 0) {
+    if (q == NULL || q->qSize == 0) {
         return 0;
     } else {
-        return (size_t)q->row_index;
+        return (size_t)q->qSize;
     }
 }
 
@@ -259,30 +243,30 @@ size_t queue_size(queue_t *q) {
  *
  * @param[in] q The queue to reverse
  */
-void queue_reverse(queue_t *q) {
-    /* You need to write the code for this function */
-    list_ele_t *prevElement;
-    list_ele_t *currElement;
-    list_ele_t *nextElement;
+// void queue_reverse(queue_t *q) {
+//     /* You need to write the code for this function */
+//     list_ele_t *prevElement;
+//     list_ele_t *currElement;
+//     list_ele_t *nextElement;
 
-    if (q != NULL && q->row_index > 0) {
-        prevElement = NULL;
-        currElement = q->head;
-        nextElement = currElement->next;
+//     if (q != NULL && q->qSize > 0) {
+//         prevElement = NULL;
+//         currElement = q->head;
+//         nextElement = currElement->next;
 
-        // trivially first element now becomes the tail
-        q->tail = currElement;
+//         // trivially first element now becomes the tail
+//         q->tail = currElement;
 
-        while (currElement != NULL) {
-            nextElement = currElement->next;
+//         while (currElement != NULL) {
+//             nextElement = currElement->next;
 
-            currElement->next = prevElement;
+//             currElement->next = prevElement;
 
-            prevElement = currElement;
-            currElement = nextElement;
-        }
+//             prevElement = currElement;
+//             currElement = nextElement;
+//         }
 
-        // trivially upon currElement== NULL, prevElement is the head
-        q->head = prevElement;
-    }
-}
+//         // trivially upon currElement== NULL, prevElement is the head
+//         q->head = prevElement;
+//     }
+// }

@@ -2,4 +2,4 @@
 make clean
 make
 ./augment
-./main > ./results/results.txt 
+./main 1 > ./results/results.txt 

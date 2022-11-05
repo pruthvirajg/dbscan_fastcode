@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "./include/dbscan.h"
 #include "./include/utils.h"
 #include "./include/config.h"
-
 
 static __inline__ unsigned long long rdtsc(void) {
   unsigned hi, lo;
@@ -13,8 +14,7 @@ static __inline__ unsigned long long rdtsc(void) {
   return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
-
-int main( void )
+int main(int argc, char** argv)
 {
    unsigned long long cycles = 0;
    unsigned long long st = 0;
@@ -28,16 +28,61 @@ int main( void )
 
    int clusters;
 
+   // get cmd line arg to run ref-dbscan or acc-dbscan
+   if(argc == 2 && atoi(argv[1]) == 1){
+      ACC_DBSCAN = true;
+      printf("Running acc_dbscan()\n");
+   }
+   else{
+      ACC_DBSCAN = false;
+      printf("Running ref_dbscan() \n");
+   }
+
+
+   EPSILON_SQUARE = EPSILON * EPSILON;
+
    load_dataset();
    
+   // allocate memory for epsilon_matrix
+   #ifdef VERIFY_ACC
+   ref_epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+   if (ref_epsilon_matrix == NULL) {
+         printf("ref_epsilon_matrix memory not allocated.\n");
+         exit(0);
+   }
+   #endif
+
+   epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+   if (epsilon_matrix == NULL) {
+         printf("epsilon_matrix memory not allocated.\n");
+         exit(0);
+   }
+   
+   // allocate memory for min_pts_vector
+   #ifdef VERIFY_ACC
+   ref_min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+   if (ref_min_pts_vector == NULL) {
+         printf("ref_min_pts_vector memory not allocated.\n");
+         exit(0);
+   }
+   #endif
+
+   min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+   if (min_pts_vector == NULL) {
+         printf("min_pts_vector memory not allocated.\n");
+         exit(0);
+   }
+
+   // allocate memory for class label row traverse_mask
+   traverse_mask = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+
    // Profile for N runs
    unsigned long long runs = (unsigned long long) NUM_RUNS;
 
    for(unsigned long long i = 0; i < runs; i++){
 
       st = rdtsc();
-      
-      clusters = ref_dbscan( );
+      clusters = ACC_DBSCAN ? acc_dbscan() : ref_dbscan( );
 
       et = rdtsc();
 
@@ -48,9 +93,27 @@ int main( void )
          if(i == (runs-1)){
             break;
          }
-         dataset[j].label = UNDEFINED;
+
+         
+         dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
+         
       }
 
+      free(epsilon_matrix);
+      
+      #ifdef VERIFY_ACC
+      free(ref_min_pts_vector);
+      free(ref_epsilon_matrix);
+      #endif
+
+      free(min_pts_vector);
+
+      epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+      #ifdef VERIFY_ACC
+      ref_min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+      ref_epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+      #endif
+      min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    }
 
    dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;
@@ -61,11 +124,13 @@ int main( void )
    // Emit outliers (NOISE)
    emit_outliers();
 
+   // free all memory
    free_dataset();
+   free(epsilon_matrix);
 
    // Dataset
    printf("Dataset Metrics:\n");
-   printf("Number of datapoints: %lu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
+   printf("Number of datapoints: %llu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
 
    // For N runs
    printf("Performance Metrics Over N = %llu Runs:\n", runs);
@@ -100,7 +165,7 @@ int main( void )
    printf("Number of operations peformed in each run of DBSCAN is %llu\n", (dst_call_count/runs)*3);
    printf("Total number of cycles spent in the core distance function is %llu\n", (dst_cycles/runs));
    printf("Baseline FLOPS/Cycle = %f\n", (dst_call_count*3.0) / (dst_cycles));
-   printf("Baseline GFLOPS/Second = %f", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
+   printf("Baseline GFLOPS/Second = %f\n", ((dst_call_count*3.0) / (dst_cycles)) * MAX_FREQ );
 
    return 0;
 

@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <math.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include <x86intrin.h>
 #include <immintrin.h>
@@ -11,7 +12,8 @@
 #include "../include/dbscan.h"
 #include "../include/utils.h"
 #include "../include/config.h"
-
+#include "../include/queue.h"
+#include "../include/acc_distance.h"
 
 static __inline__ unsigned long long rdtsc(void) {
   unsigned hi, lo;
@@ -20,9 +22,9 @@ static __inline__ unsigned long long rdtsc(void) {
 }
 
 
-double ref_distance( unsigned long long i, unsigned long long j )
+float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
-   double sum = 0.0;
+   float sum = 0.0;
    dst_call_count += 1;
 
    dst_st = rdtsc();
@@ -38,7 +40,7 @@ double ref_distance( unsigned long long i, unsigned long long j )
 }
 
 
-neighbors_t *ref_find_neighbors( unsigned long long observation )
+neighbors_t *ref_find_neighbors(DTYPE_OBS observation )
 {
    #ifdef DEBUG
    printf("find_neighbours\n");
@@ -51,7 +53,7 @@ neighbors_t *ref_find_neighbors( unsigned long long observation )
    neighbors->neighbor_count = 0;
    bzero((void *)neighbors->neighbor, sizeof(int) * TOTAL_OBSERVATIONS);
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( i == observation ) continue;
 
@@ -80,7 +82,7 @@ void ref_fold_neighbors( neighbors_t *seed_set, neighbors_t *neighbors )
    printf("fold_neighbors\n");
    #endif
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       if ( neighbors->neighbor[ i ] )
       {
@@ -99,7 +101,7 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set )
    #endif
 
    // Process every member in the seed set.
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       // Is this a neighbor?
       if ( seed_set->neighbor[ i ] )
@@ -143,9 +145,12 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set )
 
 int ref_dbscan( void )
 {
+   /***
+    * Ref impl of DBSCAN
+   */
    int cluster = 0;
 
-   for ( unsigned long long i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ )
    {
       #ifdef DEBUG
       printf("Working on %llu,  %s\n", i, dataset[i].name);
@@ -173,13 +178,226 @@ int ref_dbscan( void )
 }
 
 
+int acc_dbscan( void )
+{
+   int clusters = 0;
+   int correct_min_pts;
+   int correct_eps_mat;
+   /***
+    * Re-written schedule for DBSCAN to support acceleration
+   */
+
+   // Calculate the distance and generate epsilon matrix
+   // TODO: Replace this with accelerated distance calc kernel
+   #ifdef VERIFY_ACC
+   gen_epsilon_matrix();
+   acc_distance_simd();
+   correct_eps_mat = verify_eps_mat();
+   assert(correct_eps_mat==1);
+   #else
+   acc_distance_simd();
+   #endif
+
+   #ifdef DUMP_EPSILON_MAT
+   FILE *fp;
+   fp = fopen("./epsilon_matrix.csv", "w");
+   char buffer[10000];
+   char template[] = "%d,";
+
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         sprintf(buffer, template, epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
+         fputs(buffer, fp);
+      }
+      fputs("\n", fp);
+   }
+
+   fclose(fp);
+   return 0;
+   #endif
+
+   // Reduction along the rows to check if row has > MIN_PTS
+   #ifdef VERIFY_ACC
+   calc_min_pts();
+   acc_min_pts();
+   correct_min_pts = verify_min_pts();
+   assert(correct_min_pts==0);
+   #else
+   calc_min_pts();
+   #endif
+   
+   // Label all points
+   clusters = class_label();
+   return clusters;
+}
+
+
+bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
+{
+   // reference implementation for SIMD distance
+   float distance = 0.0;
+   dst_call_count += 1;
+   int res = 0;
+
+   dst_st = rdtsc();
+   for ( int feature = 0 ; feature < FEATURES ; feature++ )
+   {
+      distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
+   }
+   dst_et = rdtsc();
+   
+   dst_cycles += (dst_et - dst_st);
+
+   res = distance <= EPSILON_SQUARE;
+   return res;
+}
+
+
+void gen_epsilon_matrix(void){
+   // Calculate the distance and generate square epsilon matrix
+   // ASSUMPTION calculating for all pairs of points including itself
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         #ifdef DEBUG
+         printf("Working on %llu,  %s\n", i, dataset[i].name);
+         #endif
+         if(i!=j) ref_epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
+         
+      }
+   }
+}
+
+int verify_eps_mat(void){
+   int correct = 1;
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         correct &= (ref_epsilon_matrix[i*TOTAL_OBSERVATIONS + j] == epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
+      }
+   }
+   return correct;
+}
+
+void acc_min_pts(void){
+   // Accelerate min points using popcnt
+   // Options:
+   // __int64 _mm_popcnt_u64 (unsigned __int64 a) 
+   // int _mm_popcnt_u32 (unsigned int a)
+   // latency 3, throughput 1
+
+   __uint64_t num_valid_points = 0;
+   __uint64_t query;
+   bool *eps_mat_ptr = epsilon_matrix;
+   // Reduction along the rows to check if row has > MIN_PTS
+   // TODO: loop unroll factor=3
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      // For each row check if MIN_PTS is met
+      num_valid_points = 0;
+
+      // row stride
+      eps_mat_ptr = epsilon_matrix + i*TOTAL_OBSERVATIONS;
+
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS/8 ; j++ ){
+         // col stride
+         query = *(((__uint64_t*)eps_mat_ptr) + j);
+         num_valid_points += _mm_popcnt_u64(query);
+      }
+
+      min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
+   }
+}
+
+
+void calc_min_pts(void){
+  DTYPE_OBS num_valid_points = 0;
+   
+   // Reduction along the rows to check if row has > MIN_PTS
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      // For each row check if MIN_PTS is met
+      num_valid_points = 0;
+
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         if(epsilon_matrix[i*TOTAL_OBSERVATIONS + j] == 1){
+            num_valid_points+=1;
+         }
+      }
+
+      ref_min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
+   }
+}
+
+
+int verify_min_pts(void){
+   int correct = 1;
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      correct &= (min_pts_vector[i] != ref_min_pts_vector[i]);
+   }
+   return correct;
+}
+
+int class_label(void){
+   // Label all points
+
+   int cluster = 0;
+   int core_pt_label = UNDEFINED;
+
+   // For each entry in min_pts_vector
+   for(DTYPE_OBS i=0; i< TOTAL_OBSERVATIONS; i++){
+      if(min_pts_vector[i] == false) continue;
+      
+      core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
+      
+      dataset[i].label = core_pt_label;
+      
+      // labelling all (direct density reachable) neighbours of core point
+      traverse_mask[i] = 1;
+      traverse_row(i, cluster, core_pt_label);
+      
+   }
+
+   return cluster;
+}
+
+void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
+   // if any row in epsilon matrix meets criteria, then iterate over the row in epsilon matrix
+   // maintain a queue of neighbours that are 1, visit those and label neighbour of neighbours
+   // for every row completely visited, set the associated visited(?) entry to 0
+   queue_t *N_List = queue_new();
+
+   for(int j=0; j< TOTAL_OBSERVATIONS; j++){
+      if (dataset[j].label != NOISE) continue;
+
+      // Assign neighbour to the cluster
+      if(epsilon_matrix[row_index*TOTAL_OBSERVATIONS + j]){
+         dataset[j].label = core_pt_label;
+      
+
+         if(!traverse_mask[j]){
+            // if not yet traversed, add row_index to N_List
+            queue_insert_tail(N_List, j);
+
+            // set traverse_mask
+            traverse_mask[j] = 1;
+         }
+      }
+   }
+
+   // process neighbours to label density reachable points
+   while(queue_size(N_List) != 0){
+      traverse_row(N_List->head->row_index, cluster, core_pt_label);
+      queue_remove_head(N_List);
+   }
+
+   queue_free(N_List);
+}
+
+
 void emit_classes(int clusters){
-   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+   DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
 
    for ( int class = 1 ; class <= clusters ; class++ )
    {
       printf( "Class %d:\n", class );
-      for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
+      for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
       {
          if ( dataset[ obs ].label == class )
          {
@@ -193,8 +411,8 @@ void emit_classes(int clusters){
 
 void emit_outliers(){
    printf( "NOISE\n" );
-   unsigned long TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
-   for ( unsigned long obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
+   DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
+   for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
    {
       if ( dataset[ obs ].label == NOISE )
       {

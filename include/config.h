@@ -4,7 +4,7 @@
 #define FILE_PATH "./data/dataset.csv"
 #define FILE_PATH_AUGMENTED "./data/augmented_dataset.csv"
 
-#define NUM_RUNS        100
+#define NUM_RUNS        1
 
 #define MAX_FREQ        3.2
 #define BASE_FREQ       2.4
@@ -27,5 +27,9 @@
 #define EPSILON          1.70
 #define MINPTS           4
 
+// datatype of feature space
 #define DTYPE float
+
+// datatype of observations iterator
+#define DTYPE_OBS unsigned long long
 #endif

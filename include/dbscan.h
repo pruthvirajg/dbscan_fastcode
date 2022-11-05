@@ -2,6 +2,12 @@
 #define _dbscan_h
 
 #include "../include/config.h"
+#include <stdbool.h>
+
+#define VERIFY_ACC 1
+// #define DUMP_EPSILON_MAT 1
+
+bool ACC_DBSCAN;
 
 typedef struct dataset_t {
    char *name;
@@ -52,12 +58,21 @@ unsigned long long dst_st;
 unsigned long long dst_et;
 unsigned long long dst_cycles;
 
-unsigned long TOTAL_OBSERVATIONS;
+DTYPE_OBS TOTAL_OBSERVATIONS;
 
-double ref_distance( unsigned long long i, unsigned long long j );
+float EPSILON_SQUARE;
 
-// neighbors_t *find_neighbors( int observation );
-neighbors_t *ref_find_neighbors( unsigned long long observation );
+bool *epsilon_matrix;
+bool *ref_epsilon_matrix;
+
+bool *ref_min_pts_vector;
+bool *min_pts_vector;
+
+bool *traverse_mask;
+
+float ref_distance(DTYPE_OBS i, DTYPE_OBS j );
+
+neighbors_t *ref_find_neighbors(DTYPE_OBS observation );
 
 void ref_free_neighbors( neighbors_t *neighbors );
 
@@ -67,6 +82,28 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set );
 
 int ref_dbscan( void );
 
+// Functions for accelerated DBSCAN
+int acc_dbscan( void );
+
+bool acc_distance(DTYPE_OBS i, DTYPE_OBS j );
+
+void gen_epsilon_matrix(void);
+
+int verify_eps_mat(void);
+
+// Min Points Functions
+void calc_min_pts(void);
+
+void acc_min_pts(void);
+
+int verify_min_pts(void);
+
+// Class labelling
+void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label);
+
+int class_label(void);
+
+// Utilities
 void emit_classes(int clusters);
 
 void emit_outliers();

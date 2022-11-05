@@ -200,19 +200,29 @@ int acc_dbscan( void )
 
    #ifdef DUMP_EPSILON_MAT
    FILE *fp;
+   FILE *ref_fp;
    fp = fopen("./epsilon_matrix.csv", "w");
+   ref_fp = fopen("./ref_epsilon_matrix.csv", "w");
    char buffer[10000];
    char template[] = "%d,";
+
+   char ref_buffer[10000];
+   char ref_template[] = "%d,";
 
    for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
       for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
          sprintf(buffer, template, epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
          fputs(buffer, fp);
+
+         sprintf(ref_buffer, ref_template, ref_epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
+         fputs(ref_buffer, ref_fp);
       }
       fputs("\n", fp);
+      fputs("\n", ref_fp);
    }
 
    fclose(fp);
+   fclose(ref_fp);
    return 0;
    #endif
 

@@ -209,7 +209,7 @@ void pt_3_sequential(int x, float eps) {
     float sum_x0x1 = 0;
     float sum_x0x2 = 0;
     float sum_x1x2 = 0;
-    int N = OBSERVATIONS;
+    int N = TOTAL_OBSERVATIONS;
 
     for (int ftr = 0; ftr < FEATURES; ftr++) {
         // 3 X
@@ -259,8 +259,8 @@ void sequential(int x, int seq_start, float eps, int mem_order) {
     uint16_t res_x0 = 0;
     uint16_t res_x1 = 0;
     uint16_t res_x2 = 0;
-    int N = OBSERVATIONS;
-    int seq_end = OBSERVATIONS;
+    int N = TOTAL_OBSERVATIONS;
+    int seq_end = TOTAL_OBSERVATIONS;
     int num_iter;
     uint16_t value_x0, value_x1, value_x2;
     int delta;
@@ -277,7 +277,7 @@ void sequential(int x, int seq_start, float eps, int mem_order) {
     // If its case 3, then the end point is the point after which everything can be done in pure SIMD, so update the end
     // If its case 2, this is the final step, so let the end be N itself
     if (mem_order == 3) {
-        seq_end = seq_start + ((OBSERVATIONS - 1) - (x + 2)) % 16;
+        seq_end = seq_start + ((TOTAL_OBSERVATIONS - 1) - (x + 2)) % 16;
         #ifdef DEBUG_ACC_DIST
         printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
         #endif

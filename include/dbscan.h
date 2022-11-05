@@ -4,6 +4,9 @@
 #include "../include/config.h"
 #include <stdbool.h>
 
+#define VERIFY_ACC 1
+// #define DUMP_EPSILON_MAT 1
+
 bool ACC_DBSCAN;
 
 typedef struct dataset_t {
@@ -61,6 +64,7 @@ float EPSILON_SQUARE;
 
 bool *epsilon_matrix;
 
+bool *ref_min_pts_vector;
 bool *min_pts_vector;
 
 bool *traverse_mask;
@@ -84,8 +88,14 @@ bool acc_distance(DTYPE_OBS i, DTYPE_OBS j );
 
 void gen_epsilon_matrix(void);
 
-void min_pts_check(void);
+// Min Points Functions
+void calc_min_pts(void);
 
+void acc_min_pts(void);
+
+int verify_min_pts(void);
+
+// Class labelling
 void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label);
 
 int class_label(void);

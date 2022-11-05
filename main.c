@@ -51,6 +51,14 @@ int main(int argc, char** argv)
    }
    
    // allocate memory for min_pts_vector
+   #ifdef VERIFY_ACC
+   ref_min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+   if (ref_min_pts_vector == NULL) {
+         printf("ref_min_pts_vector memory not allocated.\n");
+         exit(0);
+   }
+   #endif
+
    min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    if (min_pts_vector == NULL) {
          printf("min_pts_vector memory not allocated.\n");
@@ -84,9 +92,17 @@ int main(int argc, char** argv)
       }
 
       free(epsilon_matrix);
+      
+      #ifdef VERIFY_ACC
+      free(ref_min_pts_vector);
+      #endif
+
       free(min_pts_vector);
 
       epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+      #ifdef VERIFY_ACC
+      ref_min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+      #endif
       min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    }
 

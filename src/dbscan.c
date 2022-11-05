@@ -180,7 +180,7 @@ int ref_dbscan( void )
 int acc_dbscan( void )
 {
    int clusters = 0;
-
+   int correct_min_pts;
    /***
     * Re-written schedule for DBSCAN to support acceleration
    */
@@ -204,10 +204,18 @@ int acc_dbscan( void )
    }
 
    fclose(fp);
+   return 0;
    #endif
 
    // Reduction along the rows to check if row has > MIN_PTS
-   min_pts_check();
+   #ifdef VERIFY_ACC
+   calc_min_pts();
+   acc_min_pts();
+   correct_min_pts = verify_min_pts();
+   assert(correct_min_pts==0);
+   #else
+   calc_min_pts();
+   #endif
    
    // Label all points
    clusters = class_label();
@@ -244,15 +252,42 @@ void gen_epsilon_matrix(void){
          #ifdef DEBUG
          printf("Working on %llu,  %s\n", i, dataset[i].name);
          #endif
-
-         epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
+         if(i!=j) epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
          
       }
    }
 }
 
 
-void min_pts_check(void){
+void acc_min_pts(void){
+   // Accelerate min points using popcnt
+   // Options:
+   // __int64 _mm_popcnt_u64 (unsigned __int64 a) 
+   // int _mm_popcnt_u32 (unsigned int a)
+   // latency 3, throughput 1
+   __uint64_t num_valid_points = 0;
+   __uint64_t query;
+   bool *eps_mat_ptr = epsilon_matrix;
+   // Reduction along the rows to check if row has > MIN_PTS
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      // For each row check if MIN_PTS is met
+      num_valid_points = 0;
+
+      // row stride
+      eps_mat_ptr = epsilon_matrix + i*TOTAL_OBSERVATIONS;
+
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS/8 ; j++ ){
+         // col stride
+         query = *(((__uint64_t*)eps_mat_ptr) + j);
+         num_valid_points += _mm_popcnt_u64(query);
+      }
+
+      min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
+   }
+}
+
+
+void calc_min_pts(void){
   DTYPE_OBS num_valid_points = 0;
    
    // Reduction along the rows to check if row has > MIN_PTS
@@ -265,11 +300,19 @@ void min_pts_check(void){
             num_valid_points+=1;
          }
       }
-      
-      min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
+
+      ref_min_pts_vector[i] = (num_valid_points >= MINPTS) ? true: false;
    }
 }
 
+
+int verify_min_pts(void){
+   int correct = 1;
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      correct &= (min_pts_vector[i] != ref_min_pts_vector[i]);
+   }
+   return correct;
+}
 
 int class_label(void){
    // Label all points

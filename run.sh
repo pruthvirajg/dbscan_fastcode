@@ -2,4 +2,5 @@
 make clean
 make
 ./augment
-./main 1 > ./results/results.txt 
+./main > ./results/results_baseline.txt
+./main 1 > ./results/results_acc.txt

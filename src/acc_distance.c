@@ -23,7 +23,7 @@ void acc_distance_simd(void) {
     __m256 x0_y0, x0_y1, x1_y0, x1_y1;
     // Comparison results
     __m256 c0, c1, c2, c3, c4, c5;
-
+    // Set to 0
     c0 = _mm256_setzero_ps();
     c1 = _mm256_setzero_ps();
     c2 = _mm256_setzero_ps();
@@ -33,86 +33,54 @@ void acc_distance_simd(void) {
 
     int N = TOTAL_OBSERVATIONS;
 
-    //Bit-masking, consider using this as an array
-    // const uint8_t bit_0 = 1;
-    // const uint8_t bit_1 = 2;
-    // const uint8_t bit_2 = 4;
-    // const uint8_t bit_3 = 8;
-    // const uint8_t bit_4 = 16;
-    // const uint8_t bit_5 = 32;
-    // const uint8_t bit_6 = 64;
-    // const uint8_t bit_7 = 128;
-
-
     // 1 SIMD REG (EPSILON)
     E = _mm256_set1_ps(EPSILON_SQUARE);
 
     // Integers for SIMD routine (output of movemask)
     uint8_t d_x0_y0, d_x0_y1, d_x1_y0, d_x1_y1, d_x2_y0, d_x2_y1;
 
-    // Variables for serial routine
-    // iterator not needed, just for comprehension
-    float iterator = 0;
+    // Variables for sequential routine
     int pts_cnt;
-    int mem_order = 0;
     int next_pt;
 
     // Iterate over 3 X elements
-    // Make this N-1
-    for (int x = 0; x < N; x += 3) {
+    for (int x = 0; x < N-1; x += 3) {
 
-        // Possibly define a base for all 3 points?
-        // NO?  happens actually THIS WON"T HAPPEN IF N DIVISBLE BY 3
-        if (x == (N - 1)) {
-            break;
-        }
-        // pts_cnt tells us how many points of common calculation are there after the 3 pt seq. op.
+        // pts_cnt tells us how many points of common calculation are there after the pt_3_seq
         pts_cnt = ((N - 1) - (x + 2));
-        // number of SIMD routines possible
-        iterator = floor(pts_cnt / 16);
-
+ 
         // next_pt matters for case 2,3 which indicates the start of the serial portion
         next_pt = x + 3;
 
         // Just some print out stuff
         #ifdef DEBUG_ACC_DIST
-        printf("\n");
-        printf("--------------------------ITERATION x: %d--------------------\n", x);
+        printf("\n--------------------------ITERATION x: %d--------------------------\n", x);
         printf("(N-1)-(x+2) = %d\n", (N - 1) - (x + 2));
         printf("(N-1)-(x+2) %% 16 = %d\n", ((N - 1) - (x + 2)) % 16);
-        printf("ITERATOR: %d\n", (int) iterator);
         #endif
         
-
         // Decide Case for memory ordering
         // Case 1: SIMD
         // Case 2: Sequential
         // Case 3: SIMD, Sequential
+        pt_3_sequential(x);
         if (((pts_cnt % 16) == 0) && (pts_cnt != 0)) {
-            mem_order = 1;
-            pt_3_sequential(x, EPSILON_SQUARE);
-            // SIMD should start right after the 3pt seq. mark
+            // SIMD should start right after the pt_3_seq
             next_pt = x + 3;
             // Now do SIMD
         } else if ((pts_cnt % 16) == pts_cnt) {
-            mem_order = 2;
-            pt_3_sequential(x, EPSILON_SQUARE);
-            sequential(x, next_pt, EPSILON_SQUARE, mem_order);
+            sequential(x, next_pt, pts_cnt);
             // Next loop iteration if purely sequential
             continue;
         }
         // This means pts_cnt % 16 is equal to some number thats not 0 or pts_cnt
         else {
-            mem_order = 3;
-            pt_3_sequential(x, EPSILON_SQUARE);
-            sequential(x, next_pt, EPSILON_SQUARE, mem_order);
-            // SIMD should start after 3 pt seq + serial portion
+            sequential(x, next_pt, pts_cnt);
+            // SIMD should start after pt_3_seq + sequential portion
             next_pt = next_pt + (pts_cnt % 16);
             // Now do SIMD
         }
-        #ifdef DEBUG_ACC_DIST
-        printf("CASE %d\n", mem_order);
-        #endif
+
         // Generic SIMD routine for both case 1 and 3
         // They're uniquely identified by just next_pt
         for (int y = next_pt; y < N; y += 16) {
@@ -185,8 +153,8 @@ void acc_distance_simd(void) {
 
                 epsilon_matrix[ N*(y+shift) + x + 2 ] = (bool)(d_x2_y0 & (1 << shift));
                 epsilon_matrix[ N*(y+shift+8) + x + 2 ] = (bool)(d_x2_y1 & (1 << shift));
-
             }
+
             #ifdef DEBUG_ACC_DIST
             printf("\t\tSIMD PORTION WITH y = %d\n", y);
             printf("\t\t\t d_x0_y0 = %d,  d_x1_y0 = %d, d_x2_y0 = %d\n", d_x0_y0, d_x1_y0, d_x2_y0);
@@ -203,7 +171,7 @@ void acc_distance_simd(void) {
     }
 }
 
-void pt_3_sequential(int x, float eps) {
+void pt_3_sequential(int x) {
 
     float x0_s, x1_s, x2_s;
     float sum_x0x1 = 0;
@@ -217,16 +185,17 @@ void pt_3_sequential(int x, float eps) {
         x1_s = dataset[x + 1].features[ftr];
         x2_s = dataset[x + 2].features[ftr];
         // x0,x1
-        sum_x0x1 += (x0_s - x1_s) * (x0_s - x1_s);
+        sum_x0x1 += pow( (x0_s - x1_s), 2);
         // x0,x2
-        sum_x0x2 += (x0_s - x2_s) * (x0_s - x2_s);
+        sum_x0x2 += pow( (x0_s - x2_s), 2);
         // x1,x2
-        sum_x1x2 += (x1_s - x2_s) * (x1_s - x2_s);
+        sum_x1x2 += pow( (x1_s - x2_s), 2);
     }
     // EPS CMP
-    sum_x0x1 = (sum_x0x1 <= eps) ? 1 : 0;
-    sum_x0x2 = (sum_x0x2 <= eps) ? 1 : 0;
-    sum_x1x2 = (sum_x1x2 <= eps) ? 1 : 0;
+    sum_x0x1 = (sum_x0x1 <= EPSILON_SQUARE) ? 1 : 0;
+    sum_x0x2 = (sum_x0x2 <= EPSILON_SQUARE) ? 1 : 0;
+    sum_x1x2 = (sum_x1x2 <= EPSILON_SQUARE) ? 1 : 0;
+
     #ifdef DEBUG_ACC_DIST
     printf("\t3 POINT SEQUENTIAL:\n");
     printf("\tsum_x0x1 = %d, sum_x0x2 = %d, sum_x1x2 = %d\n", (bool)sum_x0x1, (bool)sum_x0x2, (bool)sum_x1x2);
@@ -242,51 +211,29 @@ void pt_3_sequential(int x, float eps) {
     epsilon_matrix[ (N*(x+1) + x+1) + 1] = (bool) sum_x1x2;
 
     // Square storage
-    // check if these additional spaces exist, could have a corner case when N != 112
+    // TODO: check if these additional spaces exist, could have a corner case when N != 112
     epsilon_matrix[ N*(x+1) + (x+1) - 1] = (bool) sum_x0x1;
     epsilon_matrix[ N*(x+2) + (x+2) - 2] = (bool) sum_x0x2;
     epsilon_matrix[ N*(x+2) + (x+2) - 1] = (bool) sum_x1x2;
-
 }
 
-void sequential(int x, int seq_start, float eps, int mem_order) {
+void sequential(int x, int seq_start, int pts_cnt) {
 
     float x0_s, x1_s, x2_s;
     float y_s;
     float sum_x0 = 0;
     float sum_x1 = 0;
     float sum_x2 = 0;
-    uint16_t res_x0 = 0;
-    uint16_t res_x1 = 0;
-    uint16_t res_x2 = 0;
     int N = TOTAL_OBSERVATIONS;
-    int seq_end = TOTAL_OBSERVATIONS;
-    int num_iter;
-    uint16_t value_x0, value_x1, value_x2;
-    int delta;
-    //Bit-masking, consider using array
-    // const uint8_t bit_0 = 1;
-    // const uint8_t bit_1 = 2;
-    // const uint8_t bit_2 = 4;
-    // const uint8_t bit_3 = 8;
-    // const uint8_t bit_4 = 16;
-    // const uint8_t bit_5 = 32;
-    // const uint8_t bit_6 = 64;
-    // const uint8_t bit_7 = 128;
+    int seq_end;
+    int delta = 1;
 
-    // If its case 3, then the end point is the point after which everything can be done in pure SIMD, so update the end
-    // If its case 2, this is the final step, so let the end be N itself
-    if (mem_order == 3) {
-        seq_end = seq_start + ((TOTAL_OBSERVATIONS - 1) - (x + 2)) % 16;
-        #ifdef DEBUG_ACC_DIST
-        printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
-        #endif
-    }
+    seq_end = seq_start + (pts_cnt % 16);
+
     #ifdef DEBUG_ACC_DIST
-    printf("\tOUTSIDE: CASE 2 Seq start = %d, Seq end = %d\n",seq_start, seq_end);
+    printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
     #endif
-    num_iter = (seq_end - seq_start);
-
+   
     for (int i = seq_start; i < seq_end; i++) {
         for (int ftr = 0; ftr < FEATURES; ftr++) {
             // 3 X
@@ -301,54 +248,24 @@ void sequential(int x, int seq_start, float eps, int mem_order) {
             sum_x2 += (x2_s - y_s) * (x2_s - y_s);
         }
         // EPS CMP
-        //printf("BEFORE: %f %f %f\n", sum_x0, sum_x1, sum_x2);
-        sum_x0 = (sum_x0 <= eps) ? 1 : 0;
-        sum_x1 = (sum_x1 <= eps) ? 1 : 0;
-        sum_x2 = (sum_x2 <= eps) ? 1 : 0;
-        // printf("AFTER sum: %d %d %d\n", (uint16_t)sum_x0, (uint16_t)sum_x1, (uint16_t)sum_x2);
+        sum_x0 = (sum_x0 <= EPSILON_SQUARE) ? 1 : 0;
+        sum_x1 = (sum_x1 <= EPSILON_SQUARE) ? 1 : 0;
+        sum_x2 = (sum_x2 <= EPSILON_SQUARE) ? 1 : 0;
 
-        // HAVE TO CAST
-        //printf("BEFORE res %d %d %d\n", res_x0, res_x1, res_x2);
-        res_x0 = ((res_x0 << 1) | (uint16_t) sum_x0);
-        res_x1 = ((res_x1 << 1) | (uint16_t) sum_x1);
-        res_x2 = ((res_x2 << 1) | (uint16_t) sum_x2);
-        //printf("AFTER res %d %d %d\n", res_x0, res_x1, res_x2);
+        // Original triangle storage
+        epsilon_matrix[ (N*x + x) + 2 + delta] = (bool) sum_x0;
+        epsilon_matrix[ (N*(x+1) + x+1) + 1 + delta] = (bool) sum_x1;
+        epsilon_matrix[ (N*(x+2) + x+2) + delta] = (bool) sum_x2;
+
+        // Square storage
+        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - 2 - delta] = (bool) sum_x0;
+        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - 1 - delta] = (bool) sum_x1;
+        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - delta] = (bool) sum_x2;
+        delta++;
 
         // Reset Sums
         sum_x0 = 0;
         sum_x1 = 0;
         sum_x2 = 0;
     }
-
-    // For the next set of points, counter needs to point to the end of x2
-    #ifdef DEBUG_ACC_DIST
-    printf("\tFINAL SERIAL PORTION:\n");
-    printf("\tres_x0 = %d, res_x1 = %d, res_x2 = %d\n\n", res_x0, res_x1, res_x2);
-    #endif
-
-
-    // Now we need to know if there are less than or greater than 8 points to store
-    // Nume iter will always be less than 16 
-    //printf("NUM ITER IS %d\n", num_iter);
-    for(int j = 0; j < num_iter; j++){
-        // +1 because you have to start from the next indice
-        delta = j+1;
-        value_x0 = (res_x0 & (1 << (num_iter-delta)));
-        value_x1 = (res_x1 & (1 << (num_iter-delta)));
-        value_x2 = (res_x2 & (1 << (num_iter-delta)));
-        // 3 pt sequential finished
-        //printf("VALUE x0 = %d,VALUE x1 = %d,VALUE x2 = %d ", value_x0, value_x1,value_x2);
-
-        // Original triangle storage
-        epsilon_matrix[ (N*x + x) + 2 + delta] = (bool) value_x0;
-        epsilon_matrix[ (N*(x+1) + x+1) + 1 + delta] = (bool) value_x1;
-        epsilon_matrix[ (N*(x+2) + x+2) + delta] = (bool) value_x2;
-
-        // Square storage
-        // re-organize this if needed
-        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - 2 - delta] = (bool) value_x0;
-        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - 1 - delta] = (bool) value_x1;
-        epsilon_matrix[ (N*(x + 2 + delta) + x + 2 + delta) - delta] = (bool) value_x2;
-    }
 }
-

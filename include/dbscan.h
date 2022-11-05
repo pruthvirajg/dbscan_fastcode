@@ -63,6 +63,7 @@ DTYPE_OBS TOTAL_OBSERVATIONS;
 float EPSILON_SQUARE;
 
 bool *epsilon_matrix;
+bool *ref_epsilon_matrix;
 
 bool *ref_min_pts_vector;
 bool *min_pts_vector;
@@ -87,6 +88,8 @@ int acc_dbscan( void );
 bool acc_distance(DTYPE_OBS i, DTYPE_OBS j );
 
 void gen_epsilon_matrix(void);
+
+int verify_eps_mat(void);
 
 // Min Points Functions
 void calc_min_pts(void);

@@ -13,6 +13,7 @@
 #include "../include/utils.h"
 #include "../include/config.h"
 #include "../include/queue.h"
+#include "../include/acc_distance.h"
 
 static __inline__ unsigned long long rdtsc(void) {
   unsigned hi, lo;
@@ -181,13 +182,21 @@ int acc_dbscan( void )
 {
    int clusters = 0;
    int correct_min_pts;
+   int correct_eps_mat;
    /***
     * Re-written schedule for DBSCAN to support acceleration
    */
 
    // Calculate the distance and generate epsilon matrix
    // TODO: Replace this with accelerated distance calc kernel
+   #ifdef VERIFY_ACC
    gen_epsilon_matrix();
+   acc_distance_simd();
+   correct_eps_mat = verify_eps_mat();
+   assert(correct_eps_mat==1);
+   #else
+   acc_distance_simd();
+   #endif
 
    #ifdef DUMP_EPSILON_MAT
    FILE *fp;
@@ -252,12 +261,21 @@ void gen_epsilon_matrix(void){
          #ifdef DEBUG
          printf("Working on %llu,  %s\n", i, dataset[i].name);
          #endif
-         if(i!=j) epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
+         if(i!=j) ref_epsilon_matrix[i*TOTAL_OBSERVATIONS + j] = acc_distance(i, j);
          
       }
    }
 }
 
+int verify_eps_mat(void){
+   int correct = 1;
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
+      for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS ; j++ ){
+         correct &= (ref_epsilon_matrix[i*TOTAL_OBSERVATIONS + j] == epsilon_matrix[i*TOTAL_OBSERVATIONS + j]);
+      }
+   }
+   return correct;
+}
 
 void acc_min_pts(void){
    // Accelerate min points using popcnt
@@ -265,10 +283,12 @@ void acc_min_pts(void){
    // __int64 _mm_popcnt_u64 (unsigned __int64 a) 
    // int _mm_popcnt_u32 (unsigned int a)
    // latency 3, throughput 1
+
    __uint64_t num_valid_points = 0;
    __uint64_t query;
    bool *eps_mat_ptr = epsilon_matrix;
    // Reduction along the rows to check if row has > MIN_PTS
+   // TODO: loop unroll factor=3
    for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i++ ){
       // For each row check if MIN_PTS is met
       num_valid_points = 0;

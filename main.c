@@ -44,6 +44,14 @@ int main(int argc, char** argv)
    load_dataset();
    
    // allocate memory for epsilon_matrix
+   #ifdef VERIFY_ACC
+   ref_epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
+   if (ref_epsilon_matrix == NULL) {
+         printf("ref_epsilon_matrix memory not allocated.\n");
+         exit(0);
+   }
+   #endif
+
    epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
    if (epsilon_matrix == NULL) {
          printf("epsilon_matrix memory not allocated.\n");
@@ -95,6 +103,7 @@ int main(int argc, char** argv)
       
       #ifdef VERIFY_ACC
       free(ref_min_pts_vector);
+      free(ref_epsilon_matrix);
       #endif
 
       free(min_pts_vector);
@@ -102,6 +111,7 @@ int main(int argc, char** argv)
       epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
       #ifdef VERIFY_ACC
       ref_min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
+      ref_epsilon_matrix = (bool *) calloc(TOTAL_OBSERVATIONS * TOTAL_OBSERVATIONS, sizeof(bool));
       #endif
       min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    }

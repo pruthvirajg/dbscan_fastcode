@@ -12,7 +12,6 @@
 #include "../include/acc_distance.h"
 
 void acc_distance_simd(void) {
-
     // For epsilon compare
     __m256 E;
     // 3 X points

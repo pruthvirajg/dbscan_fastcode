@@ -4,12 +4,12 @@
 #define FILE_PATH "./data/dataset.csv"
 #define FILE_PATH_AUGMENTED "./data/augmented_dataset.csv"
 
-#define NUM_RUNS        1
+#define NUM_RUNS        100
 
 #define MAX_FREQ        3.2
 #define BASE_FREQ       2.4
 
-#define AUGMENT_FACTOR  1
+#define AUGMENT_FACTOR  10
 
 #define OBSERVATIONS	112
 #define FEATURES	    16

@@ -4,7 +4,7 @@
 #include "../include/config.h"
 #include <stdbool.h>
 
-#define VERIFY_ACC 1
+// #define VERIFY_ACC 1
 // #define DUMP_EPSILON_MAT 1
 // #define DEBUG_ACC_DIST 1
 
@@ -58,6 +58,11 @@ int dst_call_count;
 unsigned long long dst_st;
 unsigned long long dst_et;
 unsigned long long dst_cycles;
+
+// Globals for min pts performance
+unsigned long long min_pts_st;
+unsigned long long min_pts_et;
+unsigned long long min_pts_cycles;
 
 DTYPE_OBS TOTAL_OBSERVATIONS;
 

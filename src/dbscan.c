@@ -195,7 +195,13 @@ int acc_dbscan( void )
    correct_eps_mat = verify_eps_mat();
    assert(correct_eps_mat==1);
    #else
+   dst_st = rdtsc();
+   
    acc_distance_simd();
+
+   dst_et = rdtsc();   
+   dst_cycles += (dst_et - dst_st);
+
    #endif
 
    #ifdef DUMP_EPSILON_MAT
@@ -233,7 +239,12 @@ int acc_dbscan( void )
    correct_min_pts = verify_min_pts();
    assert(correct_min_pts==0);
    #else
-   calc_min_pts();
+   min_pts_st = rdtsc();
+
+   acc_min_pts();
+
+   min_pts_et = rdtsc();   
+   min_pts_cycles += (min_pts_et - min_pts_st);
    #endif
    
    // Label all points

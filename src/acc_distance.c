@@ -90,9 +90,12 @@ void acc_distance_simd(void) {
         // Generic SIMD routine for both case 1 and 3
         // They're uniquely identified by just next_pt
         #ifdef BENCHMARK_SIMD
+        acc_dst_call_count += ((N - next_pt)/ 16) * FEATURES;
+        simd_dst_call_count += ((N - next_pt)/ 16) * FEATURES;
+
         simd_dst_st = rdtsc();
         #endif
-
+        
         for (int y = next_pt; y < N; y += 16) {
             for (int ftr = 0; ftr < FEATURES; ftr++) {
                 //------------------------------- SIMD PORTION ---------------------------------
@@ -248,7 +251,9 @@ void sequential(int x, int seq_start, int pts_cnt) {
     #ifdef DEBUG_ACC_DIST
     printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
     #endif
-   
+    
+    acc_dst_call_count += (seq_end - seq_start) * FEATURES;
+
     for (int i = seq_start; i < seq_end; i++) {
         for (int ftr = 0; ftr < FEATURES; ftr++) {
             // 3 X

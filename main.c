@@ -31,10 +31,12 @@ int main(int argc, char** argv)
    ref_dst_et  = 0;
    ref_dst_cycles = 0;
 
+   acc_dst_call_count = 0;
    acc_dst_st = 0;
    acc_dst_et  = 0;
    acc_dst_cycles = 0;
 
+   simd_dst_call_count = 0;
    simd_dst_st = 0;
    simd_dst_et  = 0;
    simd_dst_cycles = 0;
@@ -110,7 +112,6 @@ int main(int argc, char** argv)
          if(i == (runs-1)){
             break;
          }
-
          
          dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
          
@@ -153,7 +154,7 @@ int main(int argc, char** argv)
    unsigned long long acc_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
    
    // TODO: Change this to match exact number of SIMD ops done
-   unsigned long long simd_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
+   unsigned long long simd_dist_num_ops = simd_dst_call_count; //runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
 
    unsigned long long min_pts_num_ops =  runs * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 

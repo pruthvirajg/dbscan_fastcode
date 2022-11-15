@@ -25,16 +25,16 @@ static __inline__ unsigned long long rdtsc(void) {
 float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    float sum = 0.0;
-   dst_call_count += 1;
+   ref_dst_call_count += 1;
 
-   dst_st = rdtsc();
+   ref_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
-   dst_et = rdtsc();
+   ref_dst_et = rdtsc();
    
-   dst_cycles += (dst_et - dst_st);
+   ref_dst_cycles += (ref_dst_et - ref_dst_st);
 
    return sqrt( sum );
 }
@@ -195,12 +195,12 @@ int acc_dbscan( void )
    correct_eps_mat = verify_eps_mat();
    assert(correct_eps_mat==1);
    #else
-   dst_st = rdtsc();
+   acc_dst_st = rdtsc();
    
    acc_distance_simd();
 
-   dst_et = rdtsc();   
-   dst_cycles += (dst_et - dst_st);
+   acc_dst_et = rdtsc();   
+   acc_dst_cycles += (acc_dst_et - acc_dst_st);
 
    #endif
 
@@ -257,17 +257,17 @@ bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    // reference implementation for SIMD distance
    float distance = 0.0;
-   dst_call_count += 1;
+   acc_dst_call_count += 1;
    int res = 0;
 
-   dst_st = rdtsc();
+   acc_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
-   dst_et = rdtsc();
+   acc_dst_et = rdtsc();
    
-   dst_cycles += (dst_et - dst_st);
+   acc_dst_cycles += (acc_dst_et - acc_dst_st);
 
    res = distance <= EPSILON_SQUARE;
    return res;

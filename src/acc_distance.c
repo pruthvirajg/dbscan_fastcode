@@ -11,6 +11,13 @@
 #include "../include/dbscan.h"
 #include "../include/acc_distance.h"
 
+static __inline__ unsigned long long rdtsc(void) {
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+  return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
+}
+
+
 void acc_distance_simd(void) {
     // For epsilon compare
     __m256 E;
@@ -82,6 +89,10 @@ void acc_distance_simd(void) {
 
         // Generic SIMD routine for both case 1 and 3
         // They're uniquely identified by just next_pt
+        #ifdef BENCHMARK_SIMD
+        simd_dst_st = rdtsc();
+        #endif
+
         for (int y = next_pt; y < N; y += 16) {
             for (int ftr = 0; ftr < FEATURES; ftr++) {
                 //------------------------------- SIMD PORTION ---------------------------------
@@ -167,6 +178,11 @@ void acc_distance_simd(void) {
             c5 = _mm256_setzero_ps();
             //------------------------------- SIMD PORTION ---------------------------------
         }
+
+        #ifdef BENCHMARK_SIMD
+        simd_dst_et = rdtsc();   
+        simd_dst_cycles += (simd_dst_et - simd_dst_st);
+        #endif
     }
 }
 

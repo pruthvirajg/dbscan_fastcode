@@ -4,6 +4,7 @@
 #include "../include/config.h"
 #include <stdbool.h>
 
+#define BENCHMARK_SIMD 1
 // #define VERIFY_ACC 1
 // #define DUMP_EPSILON_MAT 1
 // #define DEBUG_ACC_DIST 1
@@ -53,11 +54,23 @@ typedef struct neighbors_t {
 // {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
 dataset_t *dataset;
 
-// Globals for distance performance
-int dst_call_count;
-unsigned long long dst_st;
-unsigned long long dst_et;
-unsigned long long dst_cycles;
+// Globals for ref_distance performance
+unsigned long long ref_dst_st;
+unsigned long long ref_dst_et;
+unsigned long long ref_dst_cycles;
+int ref_dst_call_count;
+
+// Globals for acc_distance performance
+unsigned long long acc_dst_st;
+unsigned long long acc_dst_et;
+unsigned long long acc_dst_cycles;
+int acc_dst_call_count;
+
+// Globals for simd_distance performance
+int simd_dst_call_count;
+unsigned long long simd_dst_st;
+unsigned long long simd_dst_et;
+unsigned long long simd_dst_cycles;
 
 // Globals for min pts performance
 unsigned long long min_pts_st;

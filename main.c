@@ -155,7 +155,7 @@ int main(int argc, char** argv)
    // TODO: Change this to match exact number of SIMD ops done
    unsigned long long simd_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
 
-   unsigned long long min_pts_num_ops =  runs * pow(TOTAL_OBSERVATIONS, 2) * sizeof(__uint64_t) / sizeof(bool);
+   unsigned long long min_pts_num_ops =  runs * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 
    printf("Dataset Metrics:\n");
    printf("Number of datapoints: %llu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);

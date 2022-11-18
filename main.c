@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
    acc_dst_percentage = ( (double)acc_dst_cycles / (double)cycles ) * 100;
 
-   simd_dst_percentage = ( (double)simd_dst_cycles / (double)cycles ) * 100;
+   simd_dst_percentage = ( (double)simd_dst_cycles / (double)acc_dst_cycles) * 100;
 
    min_pts_percentage = ( (double)min_pts_cycles / (double)cycles ) * 100;
 
@@ -154,7 +154,13 @@ int main(int argc, char** argv)
    unsigned long long acc_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
    
    // TODO: Change this to match exact number of SIMD ops done
-   unsigned long long simd_dist_num_ops = simd_dst_call_count; //runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
+   unsigned long long ops_sub = 6;
+   unsigned long long ops_fmadd = 12;
+   unsigned long long ops_cmp = 6;
+
+   unsigned long long simd_dist_num_ops = \
+         simd_dst_call_count * (ops_sub + ops_fmadd) + \
+         (simd_dst_call_count/ FEATURES) * ops_cmp;
 
    unsigned long long min_pts_num_ops =  runs * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 

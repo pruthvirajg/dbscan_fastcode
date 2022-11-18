@@ -263,9 +263,9 @@ void sequential(int x, int seq_start, int pts_cnt) {
             // 1 Y
             y_s = dataset[i].features[ftr];
             // SUB, SQR, ADD
-            sum_x0 += (x0_s - y_s) * (x0_s - y_s);
-            sum_x1 += (x1_s - y_s) * (x1_s - y_s);
-            sum_x2 += (x2_s - y_s) * (x2_s - y_s);
+            sum_x0 += pow((x0_s - y_s), 2);
+            sum_x1 += pow((x1_s - y_s), 2);
+            sum_x2 += pow((x2_s - y_s), 2);
         }
         // EPS CMP
         sum_x0 = (sum_x0 <= EPSILON_SQUARE) ? 1 : 0;

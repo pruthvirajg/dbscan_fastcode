@@ -242,7 +242,7 @@ int acc_dbscan( void )
    min_pts_st = rdtsc();
 
    acc_min_pts();
-
+   
    min_pts_et = rdtsc();   
    min_pts_cycles += (min_pts_et - min_pts_st);
    #endif
@@ -350,30 +350,58 @@ void acc_min_pts(void){
       eps_mat_ptr_4 = epsilon_matrix + (i+4) * TOTAL_OBSERVATIONS;
       eps_mat_ptr_5 = epsilon_matrix + (i+5) * TOTAL_OBSERVATIONS;
 
+      // min_pts_st = rdtsc();
+   
       for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS/8 ; j++ ){
          // col stride
-         query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
-         query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
-         query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
-         query_3 = *(((__uint64_t*)eps_mat_ptr_3) + j);
-         query_4 = *(((__uint64_t*)eps_mat_ptr_4) + j);
-         query_5 = *(((__uint64_t*)eps_mat_ptr_5) + j);
+         // query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
+         // query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
+         // query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
+         // query_3 = *(((__uint64_t*)eps_mat_ptr_3) + j);
+         // query_4 = *(((__uint64_t*)eps_mat_ptr_4) + j);
+         // query_5 = *(((__uint64_t*)eps_mat_ptr_5) + j);
          
          
-         res_0 = _mm_popcnt_u64(query_0);
-         res_1 = _mm_popcnt_u64(query_1);
-         res_2 = _mm_popcnt_u64(query_2);
-         res_3 = _mm_popcnt_u64(query_3);
-         res_4 = _mm_popcnt_u64(query_4);
-         res_5 = _mm_popcnt_u64(query_5);
+         // res_0 = _mm_popcnt_u64(query_0);
+         // res_1 = _mm_popcnt_u64(query_1);
+         // res_2 = _mm_popcnt_u64(query_2);
+         // res_3 = _mm_popcnt_u64(query_3);
+         // res_4 = _mm_popcnt_u64(query_4);
+         // res_5 = _mm_popcnt_u64(query_5);
 
+         // num_valid_points_0 += res_0;
+         // num_valid_points_1 += res_1;
+         // num_valid_points_2 += res_2;
+         // num_valid_points_3 += res_3;
+         // num_valid_points_4 += res_4;
+         // num_valid_points_5 += res_5;
+         query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
+         res_0 = _mm_popcnt_u64(query_0);
          num_valid_points_0 += res_0;
+
+         query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
+         res_1 = _mm_popcnt_u64(query_1);
          num_valid_points_1 += res_1;
+
+         query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
+         res_2 = _mm_popcnt_u64(query_2);
          num_valid_points_2 += res_2;
+
+         query_3 = *(((__uint64_t*)eps_mat_ptr_3) + j);
+         res_3 = _mm_popcnt_u64(query_3);
          num_valid_points_3 += res_3;
+
+         query_4 = *(((__uint64_t*)eps_mat_ptr_4) + j);
+         res_4 = _mm_popcnt_u64(query_4);
          num_valid_points_4 += res_4;
+
+         query_5 = *(((__uint64_t*)eps_mat_ptr_5) + j);
+         res_5 = _mm_popcnt_u64(query_5);
          num_valid_points_5 += res_5;
       }
+
+      // min_pts_et = rdtsc();   
+      // min_pts_cycles += (min_pts_et - min_pts_st);
 
       min_pts_vector[i] = (num_valid_points_0 >= MINPTS) ? true: false;
       min_pts_vector[i+1] = (num_valid_points_1 >= MINPTS) ? true: false;

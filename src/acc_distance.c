@@ -90,13 +90,14 @@ void acc_distance_simd(void) {
         // Generic SIMD routine for both case 1 and 3
         // They're uniquely identified by just next_pt
         #ifdef BENCHMARK_SIMD
-        acc_dst_call_count += ((N - next_pt)/ 16) * FEATURES;
         simd_dst_call_count += ((N - next_pt)/ 16) * FEATURES;
 
-        simd_dst_st = rdtsc();
+        // simd_dst_st = rdtsc();
         #endif
         
         for (int y = next_pt; y < N; y += 16) {
+            simd_dst_st = rdtsc();
+            
             for (int ftr = 0; ftr < FEATURES; ftr++) {
                 //------------------------------- SIMD PORTION ---------------------------------
 
@@ -126,6 +127,11 @@ void acc_distance_simd(void) {
                 c5 = _mm256_fmadd_ps(y1, y1, c5);
             }
 
+            #ifdef BENCHMARK_SIMD
+            simd_dst_et = rdtsc();
+            simd_dst_cycles += (simd_dst_et - simd_dst_st);
+            #endif
+            
             // COMPARE
             c0 = _mm256_cmp_ps(c0, E, _CMP_LE_OQ);
             c1 = _mm256_cmp_ps(c1, E, _CMP_LE_OQ);
@@ -182,10 +188,10 @@ void acc_distance_simd(void) {
             //------------------------------- SIMD PORTION ---------------------------------
         }
 
-        #ifdef BENCHMARK_SIMD
-        simd_dst_et = rdtsc();   
-        simd_dst_cycles += (simd_dst_et - simd_dst_st);
-        #endif
+        // #ifdef BENCHMARK_SIMD
+        // simd_dst_et = rdtsc();
+        // simd_dst_cycles += (simd_dst_et - simd_dst_st);
+        // #endif
     }
 }
 
@@ -251,8 +257,6 @@ void sequential(int x, int seq_start, int pts_cnt) {
     #ifdef DEBUG_ACC_DIST
     printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
     #endif
-    
-    acc_dst_call_count += (seq_end - seq_start) * FEATURES;
 
     for (int i = seq_start; i < seq_end; i++) {
         for (int ftr = 0; ftr < FEATURES; ftr++) {

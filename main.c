@@ -151,6 +151,7 @@ int main(int argc, char** argv)
    free(epsilon_matrix);
 
    // Dataset
+   // approx ops for upper triangular
    unsigned long long acc_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
    
    // TODO: Change this to match exact number of SIMD ops done
@@ -158,11 +159,12 @@ int main(int argc, char** argv)
    unsigned long long ops_fmadd = 12;
    unsigned long long ops_cmp = 6;
 
-   unsigned long long simd_dist_num_ops = \
-         simd_dst_call_count * (ops_sub + ops_fmadd) + \
-         (simd_dst_call_count/ FEATURES) * ops_cmp;
+   // unsigned long long simd_dist_num_ops = \
+   //       simd_dst_call_count * (ops_sub + ops_fmadd) + \
+   //       (simd_dst_call_count/ FEATURES) * ops_cmp;
+   unsigned long long simd_dist_num_ops = simd_dst_call_count * (ops_sub + ops_fmadd);
 
-   unsigned long long min_pts_num_ops =  runs * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
+   unsigned long long min_pts_num_ops =  runs * 3 * 6 * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 
    printf("Dataset Metrics:\n");
    printf("Number of datapoints: %llu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
@@ -224,8 +226,8 @@ int main(int argc, char** argv)
 
    // Peak Performance Min Pts
    printf("\nPeak Performance Min Pts:\n");
-   printf("Peak FLOPS/Cycle = 1.00\n");
-   printf("Peak GFLOPS/Second = 3.20\n");
+   printf("Peak FLOPS/Cycle = 3.00\n");
+   printf("Peak GFLOPS/Second = 9.60\n");
 
    // Baseline Performance Min Pts
    printf("\nAccerlated Min Pts Performance:\n");

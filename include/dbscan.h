@@ -11,12 +11,17 @@
 
 bool ACC_DBSCAN;
 
-typedef struct dataset_t {
-   char *name;
-   DTYPE  features[ FEATURES ];
-   int  class;
-   int  label;
-} dataset_t;
+// typedef struct dataset_t {
+//    char *name;
+//    DTYPE  features[ FEATURES ];
+//    int  class;
+//    int  label;
+// } dataset_t;
+
+char **name_arr;
+DTYPE **features_arr;
+int *class_arr;
+int *label_arr;
 
 typedef struct neighbors_t {
    unsigned long long neighbor_count;
@@ -52,7 +57,7 @@ typedef struct neighbors_t {
 // {"aardvark", {1,0,0,1,0,0,1,1,1,1,0,0,4,0,0,1}, 1, 0},
 // {"antelope", {1,0,0,1,0,0,0,1,1,1,0,0,4,1,0,1}, 1, 0},
 // {"bass",     {0,0,1,0,0,1,1,1,1,0,0,1,0,1,0,0}, 4, 0},
-dataset_t *dataset;
+// dataset_t *dataset;
 
 // Globals for ref_distance performance
 unsigned long long ref_dst_st;

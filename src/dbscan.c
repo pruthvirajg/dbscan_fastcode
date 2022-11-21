@@ -30,7 +30,8 @@ float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
    ref_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
-      sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
+      // sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
+      sum += SQR( ( features_arr[i][feature] - features_arr[j][feature] ) );
    }
    ref_dst_et = rdtsc();
    
@@ -109,19 +110,22 @@ void ref_process_neighbors( int initial_point, neighbors_t *seed_set )
          seed_set->neighbor[ i ] = 0;
 
          
-         if ( dataset[ i ].label != UNDEFINED || dataset[ initial_point ].label==NOISE)
+         // if ( dataset[ i ].label != UNDEFINED || dataset[ initial_point ].label==NOISE)
+         if ( label_arr[i] != UNDEFINED || label_arr[initial_point]==NOISE)
          {
             // already labelled or initial_point is already NOISE, skip
             continue;
          }
-         else if ( dataset[ i ].label == NOISE )
+         // else if ( dataset[ i ].label == NOISE )
+         else if ( label_arr[i] == NOISE )
          {
             // override NOISE with label
-            dataset[ i ].label = dataset[ initial_point ].label;
+            // dataset[ i ].label = dataset[ initial_point ].label;
+            label_arr[i] = label_arr[initial_point];
          }
          else{
             // base case (is UNDEFINED) apply label
-            dataset[ i ].label = dataset[ initial_point ].label;
+            label_arr[i] = label_arr[initial_point];
          }
 
          #ifdef DEBUG
@@ -155,19 +159,22 @@ int ref_dbscan( void )
       #ifdef DEBUG
       printf("Working on %llu,  %s\n", i, dataset[i].name);
       #endif
-      if ( dataset[ i ].label != UNDEFINED ) continue;
+      // if ( dataset[ i ].label != UNDEFINED ) continue;
+      if ( label_arr[i] != UNDEFINED ) continue;
       
       neighbors_t *neighbors = ref_find_neighbors( i );
 
       if ( neighbors->neighbor_count < MINPTS )
       {
-         dataset[ i ].label = NOISE;
+         // dataset[ i ].label = NOISE;
+         label_arr[i] = NOISE;
          ref_free_neighbors( neighbors );
          continue;
       }
 
       // Create a new cluster.
-      dataset[ i ].label = ++cluster;
+      // dataset[ i ].label = ++cluster;
+      label_arr[i] = ++cluster;
       
       ref_process_neighbors( i, neighbors  );
 
@@ -263,7 +270,8 @@ bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
    acc_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
-      distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
+      // distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
+      distance += SQR( ( features_arr[i][feature] - features_arr[j][feature] ) );
    }
    acc_dst_et = rdtsc();
    
@@ -450,9 +458,11 @@ int class_label(void){
    for(DTYPE_OBS i=0; i< TOTAL_OBSERVATIONS; i++){
       if(min_pts_vector[i] == false) continue;
       
-      core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
+      // core_pt_label = dataset[i].label != NOISE ? dataset[i].label: ++cluster;
+      core_pt_label = label_arr[i] != NOISE ? label_arr[i] : ++cluster;
       
-      dataset[i].label = core_pt_label;
+      // dataset[i].label = core_pt_label;
+      label_arr[i] = core_pt_label;
       
       // labelling all (direct density reachable) neighbours of core point
       traverse_mask[i] = 1;
@@ -470,11 +480,13 @@ void traverse_row(DTYPE_OBS row_index, int cluster, int core_pt_label){
    queue_t *N_List = queue_new();
 
    for(int j=0; j< TOTAL_OBSERVATIONS; j++){
-      if (dataset[j].label != NOISE) continue;
+      // if (dataset[j].label != NOISE) continue;
+      if (label_arr[j] != NOISE) continue;
 
       // Assign neighbour to the cluster
       if(epsilon_matrix[row_index*TOTAL_OBSERVATIONS + j]){
-         dataset[j].label = core_pt_label;
+         // dataset[j].label = core_pt_label;
+         label_arr[j] = core_pt_label;
       
 
          if(!traverse_mask[j]){
@@ -505,9 +517,11 @@ void emit_classes(int clusters){
       printf( "Class %d:\n", class );
       for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
       {
-         if ( dataset[ obs ].label == class )
+         // if ( dataset[ obs ].label == class )
+         if ( label_arr[ obs ] == class )
          {
-            printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+            // printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+            printf("  %s (%d)\n", name_arr[ obs ], class_arr[ obs ] );
          }
       }
       printf("\n");
@@ -520,9 +534,10 @@ void emit_outliers(){
    DTYPE_OBS TOTAL_OBSERVATIONS = OBSERVATIONS * AUGMENT_FACTOR;
    for (DTYPE_OBS obs = 0 ; obs < TOTAL_OBSERVATIONS ; obs++ )
    {
-      if ( dataset[ obs ].label == NOISE )
+      if ( label_arr[ obs ] == NOISE )
       {
-         printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+         // printf("  %s (%d)\n", dataset[ obs ].name, dataset[ obs ].class );
+         printf("  %s (%d)\n", name_arr[ obs ], class_arr[ obs ] );
       }
    }
    printf("\n");

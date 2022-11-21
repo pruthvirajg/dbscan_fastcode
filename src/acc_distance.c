@@ -102,13 +102,25 @@ void acc_distance_simd(void) {
                 //------------------------------- SIMD PORTION ---------------------------------
 
                 // 3 SIMD REG (BROADCAST POINTS)
-                x0 = _mm256_set1_ps(dataset[x].features[ftr]);
-                x1 = _mm256_set1_ps(dataset[x + 1].features[ftr]);
-                x2 = _mm256_set1_ps(dataset[x + 2].features[ftr]);
+                // x0 = _mm256_set1_ps(dataset[x].features[ftr]);
+                // x1 = _mm256_set1_ps(dataset[x + 1].features[ftr]);
+                // x2 = _mm256_set1_ps(dataset[x + 2].features[ftr]);
+                x0 = _mm256_set1_ps(features_arr[x][ftr]);
+                x1 = _mm256_set1_ps(features_arr[x + 1][ftr]);
+                x2 = _mm256_set1_ps(features_arr[x + 2][ftr]);
 
                 // 2 SIMD REG (DISTANCE POINTS)
-                y0 = _mm256_set_ps(dataset[y + 7].features[ftr], dataset[y + 6].features[ftr], dataset[y + 5].features[ftr], dataset[y + 4].features[ftr], dataset[y + 3].features[ftr], dataset[y + 2].features[ftr], dataset[y + 1].features[ftr], dataset[y].features[ftr]);
-                y1 = _mm256_set_ps(dataset[y + 15].features[ftr], dataset[y + 14].features[ftr], dataset[y + 13].features[ftr], dataset[y + 12].features[ftr], dataset[y + 11].features[ftr], dataset[y + 10].features[ftr], dataset[y + 9].features[ftr], dataset[y + 8].features[ftr]);
+                // y0 = _mm256_set_ps(dataset[y + 7].features[ftr], dataset[y + 6].features[ftr], dataset[y + 5].features[ftr], dataset[y + 4].features[ftr], dataset[y + 3].features[ftr], dataset[y + 2].features[ftr], dataset[y + 1].features[ftr], dataset[y].features[ftr]);
+                // y1 = _mm256_set_ps(dataset[y + 15].features[ftr], dataset[y + 14].features[ftr], dataset[y + 13].features[ftr], dataset[y + 12].features[ftr], dataset[y + 11].features[ftr], dataset[y + 10].features[ftr], dataset[y + 9].features[ftr], dataset[y + 8].features[ftr]);
+                y0 = _mm256_set_ps(features_arr[y + 7][ftr], features_arr[y + 6][ftr], 
+                                    features_arr[y + 5][ftr], features_arr[y + 4][ftr],
+                                    features_arr[y + 3][ftr], features_arr[y + 2][ftr],
+                                    features_arr[y + 1][ftr], features_arr[y][ftr]);
+
+                y1 = _mm256_set_ps(features_arr[y + 15][ftr], features_arr[y + 14][ftr],
+                                    features_arr[y + 13][ftr], features_arr[y + 12][ftr],
+                                    features_arr[y + 11][ftr], features_arr[y + 10][ftr],
+                                    features_arr[y + 9][ftr], features_arr[y + 8][ftr]);
 
                 // 4 SIMD REG (INTERMEDIATE SUB)
                 x0_y0 = _mm256_sub_ps(x0, y0);
@@ -205,9 +217,13 @@ void pt_3_sequential(int x) {
 
     for (int ftr = 0; ftr < FEATURES; ftr++) {
         // 3 X
-        x0_s = dataset[x].features[ftr];
-        x1_s = dataset[x + 1].features[ftr];
-        x2_s = dataset[x + 2].features[ftr];
+        // x0_s = dataset[x].features[ftr];
+        // x1_s = dataset[x + 1].features[ftr];
+        // x2_s = dataset[x + 2].features[ftr];
+        x0_s = features_arr[x][ftr];
+        x1_s = features_arr[x + 1][ftr];
+        x2_s = features_arr[x + 2][ftr];
+        
         // x0,x1
         sum_x0x1 += pow( (x0_s - x1_s), 2);
         // x0,x2
@@ -261,11 +277,18 @@ void sequential(int x, int seq_start, int pts_cnt) {
     for (int i = seq_start; i < seq_end; i++) {
         for (int ftr = 0; ftr < FEATURES; ftr++) {
             // 3 X
-            x0_s = dataset[x].features[ftr];
-            x1_s = dataset[x + 1].features[ftr];
-            x2_s = dataset[x + 2].features[ftr];
+            
+            // x0_s = dataset[x].features[ftr];
+            // x1_s = dataset[x + 1].features[ftr];
+            // x2_s = dataset[x + 2].features[ftr];
+            x0_s = features_arr[x][ftr];
+            x1_s = features_arr[x + 1][ftr];
+            x2_s = features_arr[x + 2][ftr];
+
             // 1 Y
-            y_s = dataset[i].features[ftr];
+            // y_s = dataset[i].features[ftr];
+            y_s = features_arr[i][ftr];
+            
             // SUB, SQR, ADD
             sum_x0 += pow((x0_s - y_s), 2);
             sum_x1 += pow((x1_s - y_s), 2);

@@ -113,7 +113,8 @@ int main(int argc, char** argv)
             break;
          }
          
-         dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
+         // dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
+         label_arr[j] = ACC_DBSCAN ? NOISE : UNDEFINED;
          
       }
 

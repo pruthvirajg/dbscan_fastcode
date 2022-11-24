@@ -25,16 +25,16 @@ static __inline__ unsigned long long rdtsc(void) {
 float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    float sum = 0.0;
-   dst_call_count += 1;
+   ref_dst_call_count += 1;
 
-   dst_st = rdtsc();
+   ref_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
-   dst_et = rdtsc();
+   ref_dst_et = rdtsc();
    
-   dst_cycles += (dst_et - dst_st);
+   ref_dst_cycles += (ref_dst_et - ref_dst_st);
 
    return sqrt( sum );
 }
@@ -195,12 +195,12 @@ int acc_dbscan( void )
    correct_eps_mat = verify_eps_mat();
    assert(correct_eps_mat==1);
    #else
-   dst_st = rdtsc();
+   acc_dst_st = rdtsc();
    
    acc_distance_simd();
 
-   dst_et = rdtsc();   
-   dst_cycles += (dst_et - dst_st);
+   acc_dst_et = rdtsc();   
+   acc_dst_cycles += (acc_dst_et - acc_dst_st);
 
    #endif
 
@@ -242,7 +242,7 @@ int acc_dbscan( void )
    min_pts_st = rdtsc();
 
    acc_min_pts();
-
+   
    min_pts_et = rdtsc();   
    min_pts_cycles += (min_pts_et - min_pts_st);
    #endif
@@ -257,17 +257,17 @@ bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
 {
    // reference implementation for SIMD distance
    float distance = 0.0;
-   dst_call_count += 1;
+   acc_dst_call_count += 1;
    int res = 0;
 
-   dst_st = rdtsc();
+   acc_dst_st = rdtsc();
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
    }
-   dst_et = rdtsc();
+   acc_dst_et = rdtsc();
    
-   dst_cycles += (dst_et - dst_st);
+   acc_dst_cycles += (acc_dst_et - acc_dst_st);
 
    res = distance <= EPSILON_SQUARE;
    return res;
@@ -314,42 +314,101 @@ void acc_min_pts(void){
    __uint64_t num_valid_points_2 = 0;
    __uint64_t query_2;
 
-   __uint64_t res_0, res_1, res_2;
+   __uint64_t num_valid_points_3 = 0;
+   __uint64_t query_3;
+
+   __uint64_t num_valid_points_4 = 0;
+   __uint64_t query_4;
+
+   __uint64_t num_valid_points_5 = 0;
+   __uint64_t query_5;
+
+   __uint64_t res_0, res_1, res_2, res_3, res_4, res_5;
 
    bool *eps_mat_ptr_0 = epsilon_matrix;
    bool *eps_mat_ptr_1 = epsilon_matrix;
    bool *eps_mat_ptr_2 = epsilon_matrix;
+   bool *eps_mat_ptr_3 = epsilon_matrix;
+   bool *eps_mat_ptr_4 = epsilon_matrix;
+   bool *eps_mat_ptr_5 = epsilon_matrix;
 
    // Reduction along the rows to check if row has > MIN_PTS
-   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i+=3 ){
+   for (DTYPE_OBS i = 0 ; i < TOTAL_OBSERVATIONS ; i+=6 ){
       // For each row check if MIN_PTS is met
       num_valid_points_0 = 0;
       num_valid_points_1 = 0;
       num_valid_points_2 = 0;
+      num_valid_points_3 = 0;
+      num_valid_points_4 = 0;
+      num_valid_points_5 = 0;
 
       // row stride
       eps_mat_ptr_0 = epsilon_matrix + i * TOTAL_OBSERVATIONS;
       eps_mat_ptr_1 = epsilon_matrix + (i+1) * TOTAL_OBSERVATIONS;
       eps_mat_ptr_2 = epsilon_matrix + (i+2) * TOTAL_OBSERVATIONS;
+      eps_mat_ptr_3 = epsilon_matrix + (i+3) * TOTAL_OBSERVATIONS;
+      eps_mat_ptr_4 = epsilon_matrix + (i+4) * TOTAL_OBSERVATIONS;
+      eps_mat_ptr_5 = epsilon_matrix + (i+5) * TOTAL_OBSERVATIONS;
 
+      // min_pts_st = rdtsc();
+   
       for (DTYPE_OBS j = 0 ; j < TOTAL_OBSERVATIONS/8 ; j++ ){
          // col stride
-         query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
-         query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
-         query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
+         // query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
+         // query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
+         // query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
+         // query_3 = *(((__uint64_t*)eps_mat_ptr_3) + j);
+         // query_4 = *(((__uint64_t*)eps_mat_ptr_4) + j);
+         // query_5 = *(((__uint64_t*)eps_mat_ptr_5) + j);
          
-         res_0 = _mm_popcnt_u64(query_0);
-         res_1 = _mm_popcnt_u64(query_1);
-         res_2 = _mm_popcnt_u64(query_2);
+         
+         // res_0 = _mm_popcnt_u64(query_0);
+         // res_1 = _mm_popcnt_u64(query_1);
+         // res_2 = _mm_popcnt_u64(query_2);
+         // res_3 = _mm_popcnt_u64(query_3);
+         // res_4 = _mm_popcnt_u64(query_4);
+         // res_5 = _mm_popcnt_u64(query_5);
 
+         // num_valid_points_0 += res_0;
+         // num_valid_points_1 += res_1;
+         // num_valid_points_2 += res_2;
+         // num_valid_points_3 += res_3;
+         // num_valid_points_4 += res_4;
+         // num_valid_points_5 += res_5;
+         query_0 = *(((__uint64_t*)eps_mat_ptr_0) + j);
+         res_0 = _mm_popcnt_u64(query_0);
          num_valid_points_0 += res_0;
+
+         query_1 = *(((__uint64_t*)eps_mat_ptr_1) + j);
+         res_1 = _mm_popcnt_u64(query_1);
          num_valid_points_1 += res_1;
+
+         query_2 = *(((__uint64_t*)eps_mat_ptr_2) + j);
+         res_2 = _mm_popcnt_u64(query_2);
          num_valid_points_2 += res_2;
+
+         query_3 = *(((__uint64_t*)eps_mat_ptr_3) + j);
+         res_3 = _mm_popcnt_u64(query_3);
+         num_valid_points_3 += res_3;
+
+         query_4 = *(((__uint64_t*)eps_mat_ptr_4) + j);
+         res_4 = _mm_popcnt_u64(query_4);
+         num_valid_points_4 += res_4;
+
+         query_5 = *(((__uint64_t*)eps_mat_ptr_5) + j);
+         res_5 = _mm_popcnt_u64(query_5);
+         num_valid_points_5 += res_5;
       }
+
+      // min_pts_et = rdtsc();   
+      // min_pts_cycles += (min_pts_et - min_pts_st);
 
       min_pts_vector[i] = (num_valid_points_0 >= MINPTS) ? true: false;
       min_pts_vector[i+1] = (num_valid_points_1 >= MINPTS) ? true: false;
       min_pts_vector[i+2] = (num_valid_points_2 >= MINPTS) ? true: false;
+      min_pts_vector[i+3] = (num_valid_points_3 >= MINPTS) ? true: false;
+      min_pts_vector[i+4] = (num_valid_points_4 >= MINPTS) ? true: false;
+      min_pts_vector[i+5] = (num_valid_points_5 >= MINPTS) ? true: false;
    }
 }
 

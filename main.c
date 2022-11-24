@@ -19,13 +19,27 @@ int main(int argc, char** argv)
    unsigned long long cycles = 0;
    unsigned long long st = 0;
    unsigned long long et = 0;
-   double dst_percentage = 0;
+   
+   double ref_dst_percentage = 0;
+   double acc_dst_percentage = 0;
+   double simd_dst_percentage = 0;
+
    double min_pts_percentage = 0;
 
-   dst_call_count = 0;
-   dst_st = 0;
-   dst_et  = 0;
-   dst_cycles = 0;
+   ref_dst_call_count = 0;
+   ref_dst_st = 0;
+   ref_dst_et  = 0;
+   ref_dst_cycles = 0;
+
+   acc_dst_call_count = 0;
+   acc_dst_st = 0;
+   acc_dst_et  = 0;
+   acc_dst_cycles = 0;
+
+   simd_dst_call_count = 0;
+   simd_dst_st = 0;
+   simd_dst_et  = 0;
+   simd_dst_cycles = 0;
 
    min_pts_st = 0;
    min_pts_et  = 0;
@@ -98,7 +112,6 @@ int main(int argc, char** argv)
          if(i == (runs-1)){
             break;
          }
-
          
          dataset[j].label = ACC_DBSCAN ? NOISE : UNDEFINED;
          
@@ -121,7 +134,9 @@ int main(int argc, char** argv)
       min_pts_vector = (bool *) calloc(TOTAL_OBSERVATIONS, sizeof(bool));
    }
 
-   dst_percentage = ( (double)dst_cycles / (double)cycles ) * 100;
+   acc_dst_percentage = ( (double)acc_dst_cycles / (double)cycles ) * 100;
+
+   simd_dst_percentage = ( (double)simd_dst_cycles / (double)acc_dst_cycles) * 100;
 
    min_pts_percentage = ( (double)min_pts_cycles / (double)cycles ) * 100;
 
@@ -136,9 +151,20 @@ int main(int argc, char** argv)
    free(epsilon_matrix);
 
    // Dataset
-   unsigned long long dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
+   // approx ops for upper triangular
+   unsigned long long acc_dist_num_ops = runs * 3 * (TOTAL_OBSERVATIONS * (TOTAL_OBSERVATIONS - 1) / 2);
+   
+   // TODO: Change this to match exact number of SIMD ops done
+   unsigned long long ops_sub = 6;
+   unsigned long long ops_fmadd = 12;
+   unsigned long long ops_cmp = 6;
 
-   unsigned long long min_pts_num_ops =  runs * pow(TOTAL_OBSERVATIONS, 2) * sizeof(__uint64_t) / sizeof(bool);
+   // unsigned long long simd_dist_num_ops = \
+   //       simd_dst_call_count * (ops_sub + ops_fmadd) + \
+   //       (simd_dst_call_count/ FEATURES) * ops_cmp;
+   unsigned long long simd_dist_num_ops = simd_dst_call_count * (ops_sub + ops_fmadd);
+
+   unsigned long long min_pts_num_ops =  runs * 3 * 6 * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 
    printf("Dataset Metrics:\n");
    printf("Number of datapoints: %llu, Number of features: %d\n\n", TOTAL_OBSERVATIONS, FEATURES);
@@ -146,15 +172,19 @@ int main(int argc, char** argv)
    // For N runs
    printf("Performance Metrics Over N = %llu Runs:\n", runs);
    printf("RDTSC Base Cycles Taken for dbscan: %llu\n", cycles);
-   printf("RDTSC Base Cycles Taken for distance: %llu\n", dst_cycles);
+   printf("RDTSC Base Cycles Taken for acc_distance: %llu\n", acc_dst_cycles);
+   printf("RDTSC Base Cycles Taken for simd_distance: %llu\n", simd_dst_cycles);
    printf("RDTSC Base Cycles Taken for min pts: %llu\n", min_pts_cycles);
 
    printf("TURBO Cycles Taken for dbscan: %f\n", cycles * ((double)MAX_FREQ)/BASE_FREQ);
-   printf("TURBO Cycles Taken for distance: %f\n", dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for acc_distance: %f\n", acc_dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for simd_distance: %f\n", simd_dst_cycles * ((double)MAX_FREQ)/BASE_FREQ);
    printf("TURBO Cycles Taken for min pts: %f\n", min_pts_cycles * ((double)MAX_FREQ)/BASE_FREQ);
 
-   printf("Percentage of Cycles Spent Calculating distance: %% %f\n", dst_percentage);
-   printf("Distance total number of ops: %llu, each of which takes ~%f cycles\n", dist_num_ops, ((double) dst_cycles / (double)dist_num_ops));
+   printf("Percentage of Cycles Spent Calculating acc_distance: %% %f\n", acc_dst_percentage);
+   printf("Percentage of Cycles Spent Calculating simd_distance: %% %f\n", simd_dst_percentage);
+   printf("acc_Distance total number of ops: %llu, each of which takes ~%f cycles\n", acc_dist_num_ops, ((double) acc_dst_cycles / (double)acc_dist_num_ops));
+   printf("simd_Distance total number of ops: %llu, each of which takes ~%f cycles\n", simd_dist_num_ops, ((double) simd_dst_cycles / (double)simd_dist_num_ops));
 
    printf("Percentage of Cycles Spent Calculating min pts: %% %f\n", min_pts_percentage);
 
@@ -162,15 +192,19 @@ int main(int argc, char** argv)
    printf("\nAverage Performance Metrics:\n");
 
    printf("Average RDTSC Base Cycles Taken for dbscan: %llu\n", (cycles/runs));
-   printf("Average RDTSC Base Cycles Taken for distance: %llu\n", (dst_cycles/runs));
+   printf("Average RDTSC Base Cycles Taken for acc_distance: %llu\n", (acc_dst_cycles/runs));
+   printf("Average RDTSC Base Cycles Taken for simd_distance: %llu\n", (simd_dst_cycles/runs));
    printf("Average RDTSC Base Cycles Taken for min pts: %llu\n", (min_pts_cycles/runs));
 
    printf("TURBO Cycles Taken for dbscan: %f\n", (cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
-   printf("TURBO Cycles Taken for distance: %f\n", (dst_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for acc_distance: %f\n", (acc_dst_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
+   printf("TURBO Cycles Taken for simd_distance: %f\n", (simd_dst_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
    printf("TURBO Cycles Taken for min pts: %f\n", (min_pts_cycles/runs) * ((double)MAX_FREQ)/BASE_FREQ);
 
-   printf("Percentage of Cycles Spent Calculating distance: %% %f\n", dst_percentage);
-   printf("Distance number of ops/ run: %llu, each of which takes ~%f cycles\n", (dist_num_ops / runs), ((double) dst_cycles / (double)dist_num_ops));
+   printf("Percentage of Cycles Spent Calculating acc_distance: %% %f\n", acc_dst_percentage);
+   printf("Percentage of Cycles Spent Calculating simd_distance: %% %f\n", simd_dst_percentage);
+   printf("acc_Distance number of ops/ run: %llu, each of which takes ~%f cycles\n", (acc_dist_num_ops / runs), ((double)acc_dst_cycles / (double)acc_dist_num_ops));
+   printf("simd_Distance number of ops/ run: %llu, each of which takes ~%f cycles\n", (simd_dist_num_ops / runs), ((double) simd_dst_cycles / (double)simd_dist_num_ops));
 
    // Peak Performance Distance
    printf("\nPeak Performance Distance:\n");
@@ -178,16 +212,22 @@ int main(int argc, char** argv)
    printf("Peak GFLOPS/Second = 76.80\n");
 
    // Baseline Performance Distance
-   printf("\nAccerlated Distance Performance:\n");
-   printf("Number of operations peformed in each run of DBSCAN is %llu\n", (dist_num_ops/runs));
-   printf("Total number of cycles spent in the core distance function is %llu\n", (dst_cycles/runs));
-   printf("Baseline FLOPS/Cycle = %f\n", ((double) dist_num_ops) / ((double) dst_cycles));
-   printf("Baseline GFLOPS/Second = %f\n", (((double) dist_num_ops) / ((double) dst_cycles)) * MAX_FREQ );
+   printf("\nAccelerated Distance Performance:\n");
+   printf("Number of operations peformed in each run of DBSCAN is %llu\n", (acc_dist_num_ops/runs));
+   printf("Total number of cycles spent in the core distance function is %llu\n", (acc_dst_cycles/runs));
+   printf("Baseline FLOPS/Cycle = %f\n", ((double) acc_dist_num_ops) / ((double) acc_dst_cycles));
+   printf("Baseline GFLOPS/Second = %f\n", (((double) acc_dist_num_ops) / ((double) acc_dst_cycles)) * MAX_FREQ );
+
+   printf("\nSIMD Distance Performance:\n");
+   printf("Number of operations peformed in each run of DBSCAN is %llu\n", (simd_dist_num_ops/runs));
+   printf("Total number of cycles spent in the core distance function is %llu\n", (simd_dst_cycles/runs));
+   printf("Baseline FLOPS/Cycle = %f\n", ((double) simd_dist_num_ops) / ((double) simd_dst_cycles));
+   printf("Baseline GFLOPS/Second = %f\n", (((double) simd_dist_num_ops) / ((double) simd_dst_cycles)) * MAX_FREQ );
 
    // Peak Performance Min Pts
    printf("\nPeak Performance Min Pts:\n");
-   printf("Peak FLOPS/Cycle = 1.00\n");
-   printf("Peak GFLOPS/Second = 3.20\n");
+   printf("Peak FLOPS/Cycle = 3.00\n");
+   printf("Peak GFLOPS/Second = 9.60\n");
 
    // Baseline Performance Min Pts
    printf("\nAccerlated Min Pts Performance:\n");

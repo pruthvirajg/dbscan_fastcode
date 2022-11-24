@@ -33,7 +33,7 @@ void print_dataset(){
       printf("%d, %s, ", i, name_arr[i]);
       
       for(int j=0; j< FEATURES; j++){
-         printf("%f, ", features_arr[i][j]);
+         printf("%f, ", *(features_arr + i*FEATURES + j));
       }
 
       printf("%d, ", class_arr[i]);
@@ -54,7 +54,7 @@ void load_dataset(){
 
    // dataset = (dataset_t *) malloc(sizeof(dataset_t)*TOTAL_OBSERVATIONS);
    name_arr = (char **) malloc(sizeof(char *) * TOTAL_OBSERVATIONS);
-   features_arr = (float **) malloc(sizeof(float*) * TOTAL_OBSERVATIONS);
+   features_arr = (float *) malloc(sizeof(DTYPE) * TOTAL_OBSERVATIONS * FEATURES);
    class_arr = (int *) malloc(sizeof(int) * TOTAL_OBSERVATIONS);
    label_arr = (int *) malloc(sizeof(int) * TOTAL_OBSERVATIONS);
 
@@ -84,11 +84,11 @@ void load_dataset(){
             name_arr[observation_count] = (char *)malloc(sizeof(char)*strlen(ch));
             strcpy(name_arr[observation_count], ch);
 
-            features_arr[observation_count] = (float *)malloc(sizeof(float) * FEATURES);
+            // features_arr[observation_count] = (float *)malloc(sizeof(float) * FEATURES);
          }
          else if(struct_counter>=1 && struct_counter <= FEATURES){
             // dataset[observation_count].features[struct_counter - 1] = (DTYPE)atoi(ch);
-            features_arr[observation_count][struct_counter - 1] = (DTYPE)atoi(ch);
+            *(features_arr + (observation_count * FEATURES) + struct_counter - 1) = (DTYPE)atoi(ch);
          }
          else if(struct_counter == FEATURES + 1){
             // dataset[observation_count].class = atoi(ch);
@@ -129,7 +129,7 @@ void augment_dataset(){
       for(int i=0; i< OBSERVATIONS; i++){
          
          // feature_set = dataset[i].features;
-         feature_set = features_arr[i];
+         feature_set = (features_arr + i*FEATURES);
 
          // sprintf(buffer, template, dataset[i].name, j, 
          //                         feature_set[0],
@@ -189,9 +189,9 @@ void free_dataset(){
       free(name_arr[i]);
    }
 
-   for(int i=0; i < TOTAL_OBSERVATIONS; i++){
-      free(features_arr[i]);
-   }
+   // for(int i=0; i < TOTAL_OBSERVATIONS; i++){
+   //    free(features_arr[i]);
+   // }
 
    free(class_arr);
    free(label_arr);

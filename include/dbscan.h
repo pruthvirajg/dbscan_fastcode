@@ -19,7 +19,7 @@ bool ACC_DBSCAN;
 // } dataset_t;
 
 char **name_arr;
-DTYPE **features_arr;
+DTYPE *features_arr;
 int *class_arr;
 int *label_arr;
 
@@ -72,7 +72,7 @@ unsigned long long acc_dst_cycles;
 int acc_dst_call_count;
 
 // Globals for simd_distance performance
-int simd_dst_call_count;
+unsigned long long simd_dst_call_count;
 unsigned long long simd_dst_st;
 unsigned long long simd_dst_et;
 unsigned long long simd_dst_cycles;

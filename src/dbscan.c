@@ -31,7 +31,7 @@ float ref_distance(DTYPE_OBS i, DTYPE_OBS j )
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       // sum += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
-      sum += SQR( ( features_arr[i][feature] - features_arr[j][feature] ) );
+      sum += SQR( ( *(features_arr + i*FEATURES + feature) - *(features_arr + j*FEATURES + feature) ) );
    }
    ref_dst_et = rdtsc();
    
@@ -271,7 +271,7 @@ bool acc_distance(DTYPE_OBS i, DTYPE_OBS j )
    for ( int feature = 0 ; feature < FEATURES ; feature++ )
    {
       // distance += SQR( ( dataset[ i ].features[ feature ] - dataset[ j ].features[ feature ] ) );
-      distance += SQR( ( features_arr[i][feature] - features_arr[j][feature] ) );
+      distance += SQR( ( *(features_arr + i*FEATURES + feature) - *(features_arr + j*FEATURES + feature)) );
    }
    acc_dst_et = rdtsc();
    

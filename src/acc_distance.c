@@ -103,27 +103,27 @@ void acc_distance_simd(void) {
             simd_dst_st = rdtsc();
             #endif
 
-            x0_farr = features_arr[x];
-            x1_farr = features_arr[x + 1];
-            x2_farr = features_arr[x + 2];
+            x0_farr = features_arr + x*FEATURES;
+            x1_farr = x0_farr + FEATURES; // features_arr[x + 1]
+            x2_farr = x1_farr + FEATURES; //features_arr[x + 2];
 
-            y0_farr = features_arr[y];
-            y1_farr = features_arr[y + 1];
-            y2_farr = features_arr[y + 2];
-            y3_farr = features_arr[y + 3];
-            y4_farr = features_arr[y + 4];
-            y5_farr = features_arr[y + 5];
-            y6_farr = features_arr[y + 6];
-            y7_farr = features_arr[y + 7];
+            y0_farr = features_arr + y*FEATURES;//features_arr[y];
+            y1_farr = y0_farr + FEATURES; //features_arr[y + 1];
+            y2_farr = y1_farr + FEATURES;//features_arr[y + 2];
+            y3_farr = y2_farr + FEATURES;//features_arr[y + 3];
+            y4_farr = y3_farr + FEATURES;//features_arr[y + 4];
+            y5_farr = y4_farr + FEATURES;//features_arr[y + 5];
+            y6_farr = y5_farr + FEATURES;//features_arr[y + 6];
+            y7_farr = y6_farr + FEATURES;//features_arr[y + 7];
 
-            y8_farr = features_arr[y + 8];
-            y9_farr = features_arr[y + 9];
-            y10_farr = features_arr[y + 10];
-            y11_farr = features_arr[y + 11];
-            y12_farr = features_arr[y + 12];
-            y13_farr = features_arr[y + 13];
-            y14_farr = features_arr[y + 14];
-            y15_farr = features_arr[y + 15];
+            y8_farr = y7_farr + FEATURES; //features_arr[y + 8];
+            y9_farr = y8_farr + FEATURES;//features_arr[y + 9];
+            y10_farr = y9_farr + FEATURES;//features_arr[y + 10];
+            y11_farr = y10_farr + FEATURES;//features_arr[y + 11];
+            y12_farr = y11_farr + FEATURES;//features_arr[y + 12];
+            y13_farr = y12_farr + FEATURES;//features_arr[y + 13];
+            y14_farr = y13_farr + FEATURES;//features_arr[y + 14];
+            y15_farr = y14_farr + FEATURES;//features_arr[y + 15];
 
             for (int ftr = 0; ftr < FEATURES; ftr++) {
                 //------------------------------- SIMD PORTION ---------------------------------
@@ -143,39 +143,39 @@ void acc_distance_simd(void) {
                 y0 = _mm256_set_ps(y7_farr[ftr], y6_farr[ftr], y5_farr[ftr], y4_farr[ftr], y3_farr[ftr], y2_farr[ftr], y1_farr[ftr], y0_farr[ftr]);
                 y1 = _mm256_set_ps(y15_farr[ftr], y14_farr[ftr], y13_farr[ftr], y12_farr[ftr], y11_farr[ftr], y10_farr[ftr], y9_farr[ftr], y8_farr[ftr]);
                 
-                // // 4 SIMD REG (INTERMEDIATE SUB)
-                // x0_y0 = _mm256_sub_ps(x0, y0);
-                // x0_y1 = _mm256_sub_ps(x0, y1);
-                // x1_y0 = _mm256_sub_ps(x1, y0);
-                // x1_y1 = _mm256_sub_ps(x1, y1);
-                // y0 = _mm256_sub_ps(x2, y0);
-                // y1 = _mm256_sub_ps(x2, y1);
-
-                // // 6 SIMD REG (FMA) (OUTPUT)
-                // c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
-                // c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
-                // c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
-                // c3 = _mm256_fmadd_ps(x1_y1, x1_y1, c3);
-                // c4 = _mm256_fmadd_ps(y0, y0, c4);
-                // c5 = _mm256_fmadd_ps(y1, y1, c5);
-
                 // 4 SIMD REG (INTERMEDIATE SUB)
                 x0_y0 = _mm256_sub_ps(x0, y0);
                 x0_y1 = _mm256_sub_ps(x0, y1);
                 x1_y0 = _mm256_sub_ps(x1, y0);
-
-                c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
-                c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
-                c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
-
                 x1_y1 = _mm256_sub_ps(x1, y1);
                 y0 = _mm256_sub_ps(x2, y0);
                 y1 = _mm256_sub_ps(x2, y1);
 
                 // 6 SIMD REG (FMA) (OUTPUT)
+                c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
+                c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
+                c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
                 c3 = _mm256_fmadd_ps(x1_y1, x1_y1, c3);
                 c4 = _mm256_fmadd_ps(y0, y0, c4);
                 c5 = _mm256_fmadd_ps(y1, y1, c5);
+
+                // // 4 SIMD REG (INTERMEDIATE SUB)
+                // x0_y0 = _mm256_sub_ps(x0, y0);
+                // x0_y1 = _mm256_sub_ps(x0, y1);
+                // x1_y0 = _mm256_sub_ps(x1, y0);
+
+                // c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
+                // c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
+                // c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
+
+                // x1_y1 = _mm256_sub_ps(x1, y1);
+                // y0 = _mm256_sub_ps(x2, y0);
+                // y1 = _mm256_sub_ps(x2, y1);
+
+                // // 6 SIMD REG (FMA) (OUTPUT)
+                // c3 = _mm256_fmadd_ps(x1_y1, x1_y1, c3);
+                // c4 = _mm256_fmadd_ps(y0, y0, c4);
+                // c5 = _mm256_fmadd_ps(y1, y1, c5);
             }
 
             #ifdef BENCHMARK_SIMD
@@ -254,14 +254,25 @@ void pt_3_sequential(int x) {
     float sum_x1x2 = 0;
     int N = TOTAL_OBSERVATIONS;
 
+    DTYPE * x0_farr, *x1_farr, *x2_farr;
+
+    x0_farr = features_arr + x*FEATURES;
+    x1_farr = x0_farr + FEATURES; // features_arr[x + 1]
+    x2_farr = x1_farr + FEATURES; //features_arr[x + 2];
+    
     for (int ftr = 0; ftr < FEATURES; ftr++) {
         // 3 X
         // x0_s = dataset[x].features[ftr];
         // x1_s = dataset[x + 1].features[ftr];
         // x2_s = dataset[x + 2].features[ftr];
-        x0_s = features_arr[x][ftr];
-        x1_s = features_arr[x + 1][ftr];
-        x2_s = features_arr[x + 2][ftr];
+
+        // x0_s = features_arr[x][ftr];
+        // x1_s = features_arr[x + 1][ftr];
+        // x2_s = features_arr[x + 2][ftr];
+
+        x0_s = x0_farr[ftr];
+        x1_s = x1_farr[ftr];
+        x2_s = x2_farr[ftr];
         
         // x0,x1
         sum_x0x1 += pow( (x0_s - x1_s), 2);
@@ -313,6 +324,12 @@ void sequential(int x, int seq_start, int pts_cnt) {
     printf("\tSeq start = %d, Seq end = %d\n",seq_start, seq_end);
     #endif
 
+    DTYPE * x0_farr, *x1_farr, *x2_farr;
+
+    x0_farr = features_arr + x*FEATURES;
+    x1_farr = x0_farr + FEATURES; // features_arr[x + 1]
+    x2_farr = x1_farr + FEATURES; //features_arr[x + 2];
+
     for (int i = seq_start; i < seq_end; i++) {
         for (int ftr = 0; ftr < FEATURES; ftr++) {
             // 3 X
@@ -320,13 +337,17 @@ void sequential(int x, int seq_start, int pts_cnt) {
             // x0_s = dataset[x].features[ftr];
             // x1_s = dataset[x + 1].features[ftr];
             // x2_s = dataset[x + 2].features[ftr];
-            x0_s = features_arr[x][ftr];
-            x1_s = features_arr[x + 1][ftr];
-            x2_s = features_arr[x + 2][ftr];
+            // x0_s = features_arr[x][ftr];
+            // x1_s = features_arr[x + 1][ftr];
+            // x2_s = features_arr[x + 2][ftr];
 
+            x0_s = x0_farr[ftr];
+            x1_s = x1_farr[ftr];
+            x2_s = x2_farr[ftr];
+            
             // 1 Y
             // y_s = dataset[i].features[ftr];
-            y_s = features_arr[i][ftr];
+            y_s = *(features_arr + i*FEATURES + ftr);
             
             // SUB, SQR, ADD
             sum_x0 += pow((x0_s - y_s), 2);

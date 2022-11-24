@@ -88,7 +88,7 @@ void load_dataset(){
          }
          else if(struct_counter>=1 && struct_counter <= FEATURES){
             // dataset[observation_count].features[struct_counter - 1] = (DTYPE)atoi(ch);
-            features_arr[observation_count][struct_counter] = (DTYPE)atoi(ch);
+            features_arr[observation_count][struct_counter - 1] = (DTYPE)atoi(ch);
          }
          else if(struct_counter == FEATURES + 1){
             // dataset[observation_count].class = atoi(ch);
@@ -196,4 +196,5 @@ void free_dataset(){
    free(class_arr);
    free(label_arr);
    free(name_arr);
+   free(features_arr);
 }

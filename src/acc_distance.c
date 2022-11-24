@@ -94,10 +94,37 @@ void acc_distance_simd(void) {
 
         // simd_dst_st = rdtsc();
         #endif
-        
+        DTYPE *x0_farr, *x1_farr, *x2_farr;
+        DTYPE *y0_farr, *y1_farr, *y2_farr, *y3_farr, *y4_farr, *y5_farr, *y6_farr, *y7_farr;
+        DTYPE *y8_farr, *y9_farr, *y10_farr, *y11_farr, *y12_farr, *y13_farr, *y14_farr, *y15_farr;
+
         for (int y = next_pt; y < N; y += 16) {
+            #ifdef BENCHMARK_SIMD
             simd_dst_st = rdtsc();
-            
+            #endif
+
+            x0_farr = features_arr[x];
+            x1_farr = features_arr[x + 1];
+            x2_farr = features_arr[x + 2];
+
+            y0_farr = features_arr[y];
+            y1_farr = features_arr[y + 1];
+            y2_farr = features_arr[y + 2];
+            y3_farr = features_arr[y + 3];
+            y4_farr = features_arr[y + 4];
+            y5_farr = features_arr[y + 5];
+            y6_farr = features_arr[y + 6];
+            y7_farr = features_arr[y + 7];
+
+            y8_farr = features_arr[y + 8];
+            y9_farr = features_arr[y + 9];
+            y10_farr = features_arr[y + 10];
+            y11_farr = features_arr[y + 11];
+            y12_farr = features_arr[y + 12];
+            y13_farr = features_arr[y + 13];
+            y14_farr = features_arr[y + 14];
+            y15_farr = features_arr[y + 15];
+
             for (int ftr = 0; ftr < FEATURES; ftr++) {
                 //------------------------------- SIMD PORTION ---------------------------------
 
@@ -105,35 +132,47 @@ void acc_distance_simd(void) {
                 // x0 = _mm256_set1_ps(dataset[x].features[ftr]);
                 // x1 = _mm256_set1_ps(dataset[x + 1].features[ftr]);
                 // x2 = _mm256_set1_ps(dataset[x + 2].features[ftr]);
-                x0 = _mm256_set1_ps(features_arr[x][ftr]);
-                x1 = _mm256_set1_ps(features_arr[x + 1][ftr]);
-                x2 = _mm256_set1_ps(features_arr[x + 2][ftr]);
+                x0 = _mm256_set1_ps(x0_farr[ftr]);
+                x1 = _mm256_set1_ps(x1_farr[ftr]);
+                x2 = _mm256_set1_ps(x2_farr[ftr]);
 
                 // 2 SIMD REG (DISTANCE POINTS)
                 // y0 = _mm256_set_ps(dataset[y + 7].features[ftr], dataset[y + 6].features[ftr], dataset[y + 5].features[ftr], dataset[y + 4].features[ftr], dataset[y + 3].features[ftr], dataset[y + 2].features[ftr], dataset[y + 1].features[ftr], dataset[y].features[ftr]);
                 // y1 = _mm256_set_ps(dataset[y + 15].features[ftr], dataset[y + 14].features[ftr], dataset[y + 13].features[ftr], dataset[y + 12].features[ftr], dataset[y + 11].features[ftr], dataset[y + 10].features[ftr], dataset[y + 9].features[ftr], dataset[y + 8].features[ftr]);
-                y0 = _mm256_set_ps(features_arr[y + 7][ftr], features_arr[y + 6][ftr], 
-                                    features_arr[y + 5][ftr], features_arr[y + 4][ftr],
-                                    features_arr[y + 3][ftr], features_arr[y + 2][ftr],
-                                    features_arr[y + 1][ftr], features_arr[y][ftr]);
 
-                y1 = _mm256_set_ps(features_arr[y + 15][ftr], features_arr[y + 14][ftr],
-                                    features_arr[y + 13][ftr], features_arr[y + 12][ftr],
-                                    features_arr[y + 11][ftr], features_arr[y + 10][ftr],
-                                    features_arr[y + 9][ftr], features_arr[y + 8][ftr]);
+                y0 = _mm256_set_ps(y7_farr[ftr], y6_farr[ftr], y5_farr[ftr], y4_farr[ftr], y3_farr[ftr], y2_farr[ftr], y1_farr[ftr], y0_farr[ftr]);
+                y1 = _mm256_set_ps(y15_farr[ftr], y14_farr[ftr], y13_farr[ftr], y12_farr[ftr], y11_farr[ftr], y10_farr[ftr], y9_farr[ftr], y8_farr[ftr]);
+                
+                // // 4 SIMD REG (INTERMEDIATE SUB)
+                // x0_y0 = _mm256_sub_ps(x0, y0);
+                // x0_y1 = _mm256_sub_ps(x0, y1);
+                // x1_y0 = _mm256_sub_ps(x1, y0);
+                // x1_y1 = _mm256_sub_ps(x1, y1);
+                // y0 = _mm256_sub_ps(x2, y0);
+                // y1 = _mm256_sub_ps(x2, y1);
+
+                // // 6 SIMD REG (FMA) (OUTPUT)
+                // c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
+                // c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
+                // c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
+                // c3 = _mm256_fmadd_ps(x1_y1, x1_y1, c3);
+                // c4 = _mm256_fmadd_ps(y0, y0, c4);
+                // c5 = _mm256_fmadd_ps(y1, y1, c5);
 
                 // 4 SIMD REG (INTERMEDIATE SUB)
                 x0_y0 = _mm256_sub_ps(x0, y0);
                 x0_y1 = _mm256_sub_ps(x0, y1);
                 x1_y0 = _mm256_sub_ps(x1, y0);
+
+                c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
+                c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
+                c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
+
                 x1_y1 = _mm256_sub_ps(x1, y1);
                 y0 = _mm256_sub_ps(x2, y0);
                 y1 = _mm256_sub_ps(x2, y1);
 
                 // 6 SIMD REG (FMA) (OUTPUT)
-                c0 = _mm256_fmadd_ps(x0_y0, x0_y0, c0);
-                c1 = _mm256_fmadd_ps(x0_y1, x0_y1, c1);
-                c2 = _mm256_fmadd_ps(x1_y0, x1_y0, c2);
                 c3 = _mm256_fmadd_ps(x1_y1, x1_y1, c3);
                 c4 = _mm256_fmadd_ps(y0, y0, c4);
                 c5 = _mm256_fmadd_ps(y1, y1, c5);

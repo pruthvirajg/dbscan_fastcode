@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -I. -g -std=c99 -Wall -O3 -mavx -mavx2 -mfma -march=native
 
-all: augment main assemble
+all: augment main #assemble
 
 augment: augment.c ./src/utils.c
 	$(CC) -o $@ $^ $(CFLAGS) -lm

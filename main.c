@@ -163,7 +163,9 @@ int main(int argc, char** argv)
    // unsigned long long simd_dist_num_ops = \
    //       simd_dst_call_count * (ops_sub + ops_fmadd) + \
    //       (simd_dst_call_count/ FEATURES) * ops_cmp;
-   unsigned long long simd_dist_num_ops = simd_dst_call_count * (ops_sub + ops_fmadd);
+   
+   // multiply by 8 due to SIMD operating on packed singles
+   unsigned long long simd_dist_num_ops = 8 * simd_dst_call_count * (ops_sub + ops_fmadd);
 
    unsigned long long min_pts_num_ops =  runs * 3 * 6 * ((double)pow(TOTAL_OBSERVATIONS, 2) / (double)(6*8));
 

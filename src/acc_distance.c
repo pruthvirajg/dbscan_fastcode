@@ -200,6 +200,7 @@ void acc_distance_simd(void) {
             d_x2_y1 = _mm256_movemask_ps(c5);
 
             // Case 1 and 3 behave the same over here
+            // TODO: Explore conditional storage: don't store if 0 (?)
             for(int shift = 0; shift < 8; shift++){
                 // Original triangle storage
                 epsilon_matrix[ N*x + y + shift ] = (bool)(d_x0_y0 & (1 << shift));

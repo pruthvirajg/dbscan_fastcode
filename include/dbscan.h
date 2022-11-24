@@ -67,7 +67,7 @@ unsigned long long acc_dst_cycles;
 int acc_dst_call_count;
 
 // Globals for simd_distance performance
-int simd_dst_call_count;
+unsigned long long simd_dst_call_count;
 unsigned long long simd_dst_st;
 unsigned long long simd_dst_et;
 unsigned long long simd_dst_cycles;
